@@ -17,6 +17,7 @@ from .event import EventTeam
 __all__ = [
     'User',
     'UserInteraction',
+    'University',
 ]
 
 

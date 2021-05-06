@@ -88,6 +88,11 @@ class UserUpdateProfileForm(FlaskForm):
     github_url = StringField('github_url')
     website_url = StringField('website_url')
     bio = StringField('bio')
+    graduation_year = IntegerField('firstname', [
+        validators.DataRequired(),
+        validators.NumberRange(min=2010, max=2040)
+    ])
+    university = StringField('university', [validators.DataRequired()])
     is_want_news = BooleanField()
 
 

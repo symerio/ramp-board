@@ -23,7 +23,7 @@ from ramp_database.tools.user import add_user_interaction
 from ramp_database.tools.user import get_user_by_name_or_email
 from ramp_database.tools.user import set_user_by_instance
 
-from ramp_database.model import User
+from ramp_database.model import User, University
 
 from ramp_database.exceptions import NameClashError
 
@@ -143,7 +143,8 @@ def sign_up():
                 website_url=form.website_url.data,
                 bio=form.bio.data,
                 is_want_news=form.is_want_news.data,
-                access_level='not_confirmed'
+                access_level='not_confirmed',
+                graduation_year=form.graduation_year,
             )
         except NameClashError as e:
             flash(str(e))
@@ -171,7 +172,9 @@ def sign_up():
             "the confirmation link"
         )
         return redirect(url_for('auth.login'))
-    return render_template('sign_up.html', form=form)
+
+    university_names = db.session.query(University.name).all()
+    return render_template('sign_up.html', form=form, university_names=university_names)
 
 
 @mod.route("/update_profile", methods=['GET', 'POST'])
