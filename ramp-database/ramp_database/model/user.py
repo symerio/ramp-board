@@ -136,10 +136,17 @@ class User(Model):
     # Flask-Login fields
     is_authenticated = Column(Boolean, default=False)
 
+    # Custom fields
+    universities_id = Column(
+        Integer, ForeignKey('universities.id'))
+    university = relationship('University')
+    graduation_year = Column(Integer, default=None)
+
     def __init__(self, name, hashed_password, lastname, firstname, email,
                  access_level='user', hidden_notes='', linkedin_url='',
                  twitter_url='', facebook_url='', google_url='', github_url='',
-                 website_url='', bio='', is_want_news=True):
+                 website_url='', bio='', is_want_news=True,
+                 universities_id=None):
         self.name = name
         self.hashed_password = hashed_password
         self.lastname = lastname
@@ -156,6 +163,9 @@ class User(Model):
         self.website_url = website_url
         self.bio = bio
         self.is_want_news = is_want_news
+        if universities_id is not None:
+            self.university = University.query.filter_by(
+                    id=universities_id).one_or_none()
 
     @property
     def is_active(self):
@@ -395,3 +405,31 @@ default is None
     def team(self):
         """:class:`ramp_database.model.Team`: The team instance."""
         return self.event_team.team if self.event_team else None
+
+
+class University(Model):
+    """University table.
+
+    This class is used to record the list of valid universities.
+
+    Parameters
+    ----------
+    name : None or str, default is None
+        Name of the university.
+    country : None or str, default is None
+        The country of the university.
+
+    Attributes
+    ----------
+    id : int
+        The ID of the table row.
+    """
+    __tablename__ = 'universities'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, default=None, unique=True)
+    country = Column(String, default=None)
+
+    def __init__(self, name=None, country=None):
+        self.name = name
+        self.country = country
