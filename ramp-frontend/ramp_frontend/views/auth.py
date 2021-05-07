@@ -144,7 +144,8 @@ def sign_up():
                 bio=form.bio.data,
                 is_want_news=form.is_want_news.data,
                 access_level='not_confirmed',
-                graduation_year=form.graduation_year,
+                universities_id=form.university.data.id,
+                graduation_year=form.graduation_year.data,
             )
         except NameClashError as e:
             flash(str(e))

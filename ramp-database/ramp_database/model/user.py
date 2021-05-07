@@ -147,7 +147,7 @@ class User(Model):
                  access_level='user', hidden_notes='', linkedin_url='',
                  twitter_url='', facebook_url='', google_url='', github_url='',
                  website_url='', bio='', is_want_news=True,
-                 universities_id=None):
+                 universities_id=None, graduation_year=None):
         self.name = name
         self.hashed_password = hashed_password
         self.lastname = lastname
@@ -164,9 +164,8 @@ class User(Model):
         self.website_url = website_url
         self.bio = bio
         self.is_want_news = is_want_news
-        if universities_id is not None:
-            self.university = University.query.filter_by(
-                    id=universities_id).one_or_none()
+        self.universities_id = universities_id
+        self.graduation_year = graduation_year
 
     @property
     def is_active(self):

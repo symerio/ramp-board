@@ -21,7 +21,8 @@ logger = logging.getLogger('RAMP-DATABASE')
 def add_user(session, name, password, lastname, firstname, email,
              access_level='user', hidden_notes='', linkedin_url='',
              twitter_url='', facebook_url='', google_url='', github_url='',
-             website_url='', bio='', is_want_news=True):
+             website_url='', bio='', is_want_news=True,
+             universities_id=None, university=None, graduation_year=None):
     """Add a new user in the database.
 
     Parameters
@@ -58,6 +59,12 @@ def add_user(session, name, password, lastname, firstname, email,
         User biography.
     is_want_news : bool, default is True
         User wish to receive some news.
+    universities_id: int, default None
+        The id of the university
+    university: University
+        The university object
+    graduation_year: int, default=None
+        Graduation year for students
 
     Returns
     -------
@@ -74,7 +81,8 @@ def add_user(session, name, password, lastname, firstname, email,
                 linkedin_url=linkedin_url, twitter_url=twitter_url,
                 facebook_url=facebook_url, google_url=google_url,
                 github_url=github_url, website_url=website_url, bio=bio,
-                is_want_news=is_want_news)
+                is_want_news=is_want_news, universities_id=universities_id,
+                graduation_year=graduation_year)
 
     # Creating default team with the same name as the user
     # user is admin of his/her own team
