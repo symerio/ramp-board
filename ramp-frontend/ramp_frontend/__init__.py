@@ -5,7 +5,6 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 
 from ramp_database.model import Model
 
@@ -57,7 +56,6 @@ def create_app(config):
         })
 
     app = Flask('ramp-frontend', root_path=HERE)
-    migrate = Migrate(app, db)
     app.config.update(config)
 
     with app.app_context():

@@ -51,9 +51,10 @@ def test_add_user(session_scope_function):
     firstname = 'User'
     email = 'test.user@gmail.com'
     access_level = 'asked'
+    graduation_year = 2020
     add_user(session_scope_function, name=name, password=password,
              lastname=lastname, firstname=firstname, email=email,
-             access_level=access_level)
+             access_level=access_level, graduation_year=graduation_year)
     user = get_user_by_name(session_scope_function, name)
     assert user.name == name
     assert check_password(password, user.hashed_password)
@@ -61,6 +62,7 @@ def test_add_user(session_scope_function):
     assert user.firstname == firstname
     assert user.email == email
     assert user.access_level == access_level
+    assert user.graduation_year == graduation_year
     # check that a team was automatically added with the new user
     team = get_team_by_name(session_scope_function, name)
     assert team.name == name
@@ -154,7 +156,8 @@ def test_get_user_by_name(session_scope_function, name, query_type):
 def test_set_user_by_instance(session_scope_function):
     add_user(session_scope_function, name='test_user', password='password',
              lastname='lastname', firstname='firstname',
-             email='test_user@email.com', access_level='asked')
+             email='test_user@email.com', access_level='user',
+             graduation_year=2020)
     add_user(session_scope_function, name='test_user_2',
              password='password', lastname='lastname',
              firstname='firstname', email='test_user_2@email.com',
@@ -164,7 +167,7 @@ def test_set_user_by_instance(session_scope_function):
                          firstname='b', email='c', linkedin_url='d',
                          twitter_url='e', facebook_url='f', google_url='g',
                          github_url='h', website_url='i', bio='j',
-                         is_want_news=False)
+                         is_want_news=False, graduation_year=2020)
     user = get_user_by_name(session_scope_function, 'test_user')
     assert user.lastname == 'a'
     assert user.firstname == 'b'
@@ -177,6 +180,19 @@ def test_set_user_by_instance(session_scope_function):
     assert user.website_url == 'i'
     assert user.bio == 'j'
     assert user.is_want_news is False
+    assert user.graduation_year == 2020
+    assert user.access_level == 'user'
+
+    # Changing the graduation_year or university should reset the
+    # access_level
+    set_user_by_instance(session_scope_function, user, lastname='a',
+                         firstname='b', email='c', linkedin_url='d',
+                         twitter_url='e', facebook_url='f', google_url='g',
+                         github_url='h', website_url='i', bio='j',
+                         is_want_news=False, graduation_year=2021)
+    assert user.graduation_year == 2021
+    assert user.access_level == 'asked'
+
 
 
 @pytest.mark.parametrize(

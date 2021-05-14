@@ -22,7 +22,7 @@ def add_user(session, name, password, lastname, firstname, email,
              access_level='user', hidden_notes='', linkedin_url='',
              twitter_url='', facebook_url='', google_url='', github_url='',
              website_url='', bio='', is_want_news=True,
-             universities_id=None, university=None, graduation_year=None):
+             universities_id=None, graduation_year=None):
     """Add a new user in the database.
 
     Parameters
@@ -61,8 +61,6 @@ def add_user(session, name, password, lastname, firstname, email,
         User wish to receive some news.
     universities_id: int, default None
         The id of the university
-    university: University
-        The university object
     graduation_year: int, default=None
         Graduation year for students
 
@@ -342,7 +340,7 @@ def get_user_interactions_by_name(session, name=None,
 def set_user_by_instance(session, user, lastname, firstname, email,
                          linkedin_url='', twitter_url='', facebook_url='',
                          google_url='', github_url='', website_url='', bio='',
-                         is_want_news=True):
+                         is_want_news=True, universities_id=None, graduation_year=None):
     """Set the information of a user.
 
     Parameters
@@ -373,19 +371,30 @@ def set_user_by_instance(session, user, lastname, firstname, email,
         User biography.
     is_want_news : bool, default is True
         User wish to receive some news.
+    universities_id: int, default None
+        The id of the university
+    graduation_year: int, default=None
+        Graduation year for students
     """
     logger.info('Update the profile of "{}"'.format(user))
 
+    reset_access_level = False
     for field in ('lastname', 'firstname', 'linkedin_url', 'twitter_url',
                   'facebook_url', 'google_url', 'github_url', 'website_url',
-                  'bio', 'email', 'is_want_news'):
+                  'bio', 'email', 'is_want_news', 'universities_id', 'graduation_year'):
         local_attr = locals()[field]
         if field == 'email':
             local_attr = local_attr.lower()
         if getattr(user, field) != local_attr:
+            if field in ('universities_id', 'graduation_year'):
+                # updating these fields requires account re-validation
+                reset_access_level = True
             logger.info('Update the "{}" field from {} to {}'
                         .format(field, getattr(user, field), local_attr))
             setattr(user, field, local_attr)
+    if reset_access_level:
+        user.access_level = "asked"
+
     try:
         session.commit()
     except IntegrityError as e:

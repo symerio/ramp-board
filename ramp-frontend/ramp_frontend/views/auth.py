@@ -197,7 +197,9 @@ def update_profile():
             google_url=form.google_url.data,
             github_url=form.github_url.data,
             website_url=form.website_url.data,
-            is_want_news=form.is_want_news.data
+            is_want_news=form.is_want_news.data,
+            universities_id=form.university.data.id,
+            graduation_year=form.graduation_year.data,
         )
         # send_register_request_mail(user)
         return redirect(url_for('ramp.problems'))
@@ -212,6 +214,9 @@ def update_profile():
     form.website_url.data = flask_login.current_user.website_url
     form.bio.data = flask_login.current_user.bio
     form.is_want_news.data = flask_login.current_user.is_want_news
+    form.university.data = flask_login.current_user.university
+    form.graduation_year.data = flask_login.current_user.graduation_year
+
     return render_template('update_profile.html', form=form)
 
 
