@@ -10,6 +10,7 @@ from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
+from sqlalchemy import sql
 
 from .base import Model
 from .event import EventTeam
@@ -129,10 +130,12 @@ class User(Model):
     bio = Column(String(1024), default=None)
     is_want_news = Column(Boolean, default=True)
     access_level = Column(
-        Enum('admin', 'user', 'asked', 'not_confirmed', name='access_level'),
+        Enum('admin', 'user', 'asked', 'not_confirmed', 'deleted', name='access_level'),
         default='asked'
     )
     signup_timestamp = Column(DateTime, nullable=False)
+    update_timestamp = Column(DateTime, onupdate=sql.func.now(),
+                              server_default=sql.func.now())
 
     # Flask-Login fields
     is_authenticated = Column(Boolean, default=False)
