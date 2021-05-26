@@ -47,7 +47,8 @@
               <input type="checkbox" onClick="toggle_users(this)" checked> Approve all users<br /><br />
               {% for asked_user in asked_users %}
               <input type="checkbox" name="approve_users" value="{{ asked_user.name }}" checked> {{ asked_user.name }}:
-              {{ asked_user.firstname }} {{ asked_user.lastname }} - {{ asked_user.email }}<br>
+              {{ asked_user.firstname }} {{ asked_user.lastname }} - {{ asked_user.email }}<br />
+	      {{ asked_user.university.name or None }} ({{ asked_user.university.country or None }}, {{ asked_user.graduation_year }}) <br />
               {% endfor %}
             </div>
             <div class="col-sm-6 col-lg-6">

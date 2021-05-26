@@ -1,6 +1,7 @@
 """Blueprint for all authentication functions for the RAMP frontend."""
 import logging
 import uuid
+from datetime import timedelta
 
 import flask_login
 
@@ -85,7 +86,7 @@ def login():
             flash(msg)
             logger.info(msg)
             return redirect(url_for('auth.login'))
-        flask_login.login_user(user, remember=True)
+        flask_login.login_user(user, remember=True, duration=timedelta(days=90))
         session['logged_in'] = True
         user.is_authenticated = True
         db.session.commit()
@@ -159,9 +160,10 @@ def sign_up():
         )
         subject = "Confirm your email for signing-up to RAMP"
         body = ('Hi {}, \n\n Click on the following link to confirm your email'
-                ' address and finalize your sign-up to RAMP.\n\n Note that '
-                'your account still needs to be approved by a RAMP '
-                'administrator.\n\n'
+                ' address and finalize your sign-up to RAMP.\n\n '
+                'Please note that your signup request will be approved '
+                'after you send your proof of student status and expected '
+                'date of graduation to Jiao Li (li.jiao@huawei.com). \n\n'
                 .format(user.firstname))
         body += recover_url
         body += '\n\nSee you on the RAMP website!'
@@ -170,7 +172,7 @@ def sign_up():
             '{} has signed-up to RAMP'.format(user.name)
         )
         flash(
-            "We sent a confirmation email. Go read your email and click on "
+            "We sent your confirmation email. Please check your emails and click on "
             "the confirmation link"
         )
         return redirect(url_for('auth.login'))
