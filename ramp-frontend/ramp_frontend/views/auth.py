@@ -352,8 +352,8 @@ def user_confirm_email(token):
         return redirect(url_for('auth.login'))
     elif user.access_level == 'asked':
         flash(
-            "Your email address already has been confirmed. You need to wait "
-            "for an approval from a RAMP administrator", category='error'
+            "Your email address has already been confirmed. Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible.",
+            category='error'
         )
         return redirect(url_for('general.index'))
     User.query.filter_by(email=email).update({'access_level': 'asked'})
@@ -370,7 +370,6 @@ def user_confirm_email(token):
         body += 'of this user: {}'.format(url_approve)
         send_mail(admin.email, subject, body)
     flash(
-        "An email has been sent to the RAMP administrator(s) who will "
-        "approve your account"
+        "Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible."
     )
     return redirect(url_for('auth.login'))
