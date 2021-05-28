@@ -76,10 +76,15 @@ def approve_users():
             if request.form["submit_button"] == "Approve!":
                 approve_user(db.session, asked_user)
 
-                subject = 'Your RAMP account has been approved'
-                body = ('{}, your account has been approved. You can now '
-                        'sign-up for any open RAMP event.'
-                        .format(user.name))
+                subject = 'Subject: Your Xianti RAMP account has been approved'
+                body = (f'Dear {user.firstname},\n\n'
+                        f'Your xianti.fr account has been approved. You will now be able to sign-up for any RAMP Data Challenge, subject to eligibility, once it is open.\n\n'
+                        f'Also please join the Huawei RAMP Slack\n'
+                        f'(https://join.slack.com/t/huaweiramp/shared_invite/zt-qbf4vy9s-0NS4~V898h40x8cI2KHEfQ)\n'
+                        f'where all event related announcements will be made. For example, if you encounter any difficulties with the process or the platform, you can also ask questions there.\n\n'
+                        f'Best regards,\n'
+                        f'The Huawei - RAMP team'
+                )
                 send_mail(
                     to=user.email, subject=subject, body=body
                 )
