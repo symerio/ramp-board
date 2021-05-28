@@ -92,8 +92,9 @@
         </div>
         <div class="checkbox">
           {{ form.is_want_news(placeholder="is_want_news") }}
-          <label>I would like to receive news about future RAMP events</label>
+	  <label>I would like to subscribe to the newsletter from Huawei and get more information about tech talk, open day, internship, fellowship, etc. Once registered as a member, I understood that I may cancel my membership at any time by sending an email to <a href="mailto:francerdtalent@huawei.com">francerdtalent@huawei.com</a></label>
           {% for error in form.is_want_news.errors %}
+          <label>I would like to receive news about future RAMP events</label>
           <span style="color: red;">[{{ error }}]</span>
           {% endfor %}
         </div>
