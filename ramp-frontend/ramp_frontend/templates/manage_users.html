@@ -50,7 +50,7 @@
         <div class="card-body">
           <div class="row">
             <div class="col-sm-12 col-lg-12">
-	      <table id="user-table" class="display" style="width:100%">
+	      <table id="user-table" class="display" style="width:100%; font-size:70%;">
               <thead>
                   <tr>
                       <th>id</th>
@@ -62,6 +62,7 @@
                       <th>University</th>
                       <th>Graduation date</th>
                       <th>Country</th>
+                      <th>Signup date</th>
                   </tr>
               </thead>	      
               <tbody>
@@ -76,6 +77,7 @@
 		      <td>{{ user.university.name or "" }}</td>
 		      <td>{{ user.graduation_year or ""}}</td>
 		      <td>{{ user.university.country or "" }}</td>
+		      <td>{{ user.signup_timestamp }}</td>
 		  </tr>
               {% endfor %}
 	      </table>
@@ -91,7 +93,11 @@
 {% block scripts %}
 <script>
   $(document).ready( function () {
-	    $('#user-table').DataTable();
+	  $('#user-table').DataTable({ 
+		  pageLength: 50,
+		  ordering: true,
+		  //order: [(9, "desc")],
+	  });
   } );
 </script>
 {% endblock %}
