@@ -26,7 +26,6 @@ from ramp_database.tools.user import get_user_by_name_or_email
 from ramp_database.tools.user import set_user_by_instance
 
 from ramp_database.model import User, University, Team
-
 from ramp_database.exceptions import NameClashError
 
 from ramp_frontend import db
@@ -222,6 +221,7 @@ def update_profile():
 
     return render_template('update_profile.html', form=form)
 
+
 @mod.route("/delete_profile", methods=['GET'])
 @flask_login.login_required
 def delete_profile():
@@ -233,12 +233,8 @@ def delete_profile():
     user.is_authenticated = False
     user.hashed_password = uuid.uuid4().hex
 
-    (
-        db.session.query(Team)
-            .filter(Team.admin_id == user_id)
-            .update({Team.name: f"deleted_{user_id}"})
-    )
-
+    query = db.session.query(Team).filter(Team.admin_id == user_id)
+    query.update({Team.name: f"deleted_{user_id}"})
 
     # Reinitialize all the remaining User fields to defaults.
     # session.commit is done inside the following function
@@ -253,7 +249,6 @@ def delete_profile():
     flask_login.logout_user()
 
     return redirect('/')
-
 
 
 @mod.route('/reset_password', methods=["GET", "POST"])
