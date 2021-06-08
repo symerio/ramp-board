@@ -167,6 +167,7 @@
                                                     leaderboard</a></li>
                                             <li><a href="/events/{{ event.name }}/sandbox">Sandbox</a></li>
                                             <li><a href="/events/{{ event.name }}/my_submissions">My submissions</a>
+                                            <li><a href="/events/{{ event.name }}/team">My teams</a>
                                             </li>
                                             {% else %}
                                             <!-- <li class='disabled'><a href="#">starting kit</a></li> -->
@@ -174,6 +175,7 @@
                                             <li class='disabled'><a href="#">Competition leaderboard</a></li>
                                             <li class='disabled'><a href="#">Sandbox</a></li>
                                             <li class='disabled'><a href="#">My submissions</a></li>
+                                            <li class='disabled'><a href="#">My teams</a></li>
                                             {% endif %}
                                             {% if admin %}
                                             <li><a href="/events/{{ event.name }}/dashboard_submissions">Dashboard
@@ -242,7 +244,7 @@
                         href="mailto:xiantiadmin@mail01.huawei.com">Contact Us <i class="icon fa fa-envelope"></i></a></span>
 	        {% if config['PRIVACY_POLICY_PAGE'] %}
 	        <span>
-		  <a href='/privacy_policy'>Privacy policy</a> 
+		  <a href='/privacy_policy'>Privacy policy</a>
 		</span>
 		{% endif %}
             </div>

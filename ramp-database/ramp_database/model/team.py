@@ -1,12 +1,16 @@
 import datetime
 
+from sqlalchemy import Enum
 from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy import Integer
+from sqlalchemy import Boolean
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
+
+from sqlalchemy import sql
 
 from .base import Model
 
@@ -22,10 +26,6 @@ class Team(Model):
         The name of the team.
     admin : :class:`ramp_database.model.User`
         The admin user of the team.
-    initiator : None or :class:`ramp_database.model.Team`, default is None
-        The team initiating a merging.
-    acceptor : None or :class:`ramp_database.model.Team`, default is None
-        The team accepting a merging.
 
     Attributes
     ----------
@@ -58,30 +58,55 @@ class Team(Model):
                          backref=backref('admined_teams',
                                          cascade="all, delete"))
 
-    # initiator asks for merge, acceptor accepts
-    initiator_id = Column(Integer, ForeignKey('teams.id'), default=None)
-    initiator = relationship(
-        'Team', primaryjoin=('Team.initiator_id == Team.id'), uselist=False
-    )
-
-    acceptor_id = Column(Integer, ForeignKey('teams.id'), default=None)
-    acceptor = relationship(
-        'Team', primaryjoin=('Team.acceptor_id == Team.id'), uselist=False
-    )
-
     creation_timestamp = Column(DateTime, nullable=False)
 
-    def __init__(self, name, admin, initiator=None, acceptor=None):
+    def __init__(self, name, admin):
         self.name = name
         self.admin = admin
-        self.initiator = initiator
-        self.acceptor = acceptor
         self.creation_timestamp = datetime.datetime.utcnow()
 
     def __str__(self):
         return 'Team({})'.format(self.name)
 
     def __repr__(self):
-        return ('Team(name={}, admin_name={}, initiator={}, acceptor={})'
-                .format(self.name, self.admin.name,
-                        self.initiator, self.acceptor))
+        return ('Team(name={}, admin_name={})'
+                .format(self.name, self.admin.name))
+
+
+class UserTeam(Model):
+    """User to team many to many association table
+
+    Parameters
+    ----------
+    user_id : int
+        The ID of the user.
+    team_id : int
+        The ID of the team.
+    status: str
+        The relationship status. One of "asked", "accepted", "admin".
+
+    Attributes
+    ----------
+    id : int
+        The ID of the table row.
+    update_timestamp : datetime
+        Last updated timestamp.
+    """
+    __tablename__ = 'user_teams'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    team_id = Column(Integer, ForeignKey('teams.id'))
+    status = Column(
+        Enum('asked', 'accepted', 'admin', name='status'),
+        default='asked'
+    )
+    is_active = Column(Boolean, default=True, nullable=False)
+    update_timestamp = Column(DateTime, onupdate=sql.func.now(),
+                              server_default=sql.func.now())
+
+    def __init__(self, user_id, team_id, status='asked', is_active=False):
+        self.user_id = user_id
+        self.team_id = team_id
+        self.status = status
+        self.is_active = is_active

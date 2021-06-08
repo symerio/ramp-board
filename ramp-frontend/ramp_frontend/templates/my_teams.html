@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}My team{% endblock %}
+
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="modal fade modal-warning" id="formerror" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Login Error</h4>
+      </div>
+      <div class="modal-body">
+        <div class="modal-message">
+          {% for message in messages %}
+          {{ message }}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-warning" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endwith %}
+
+<div class="container">
+  <div class="row">
+    <h1> My teams </h1>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="title">Current team<br />
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-sm-12 col-lg-12">
+               <label>Team name</label>
+	       <input id="name" name="name" required minlength="4" value="{{ event_team.team.name }}">
+	       <button>Update</button><br />
+	       <label>Team id:</label>  {{ event_team.team.id }} <br />
+	       <!-- <label>Team admin:</label>  {{ event_team.team.admin.name }} <br /> -->
+               <label>Members</label><br />
+	       <ul>
+                 {% for user in team_users %}
+		 <li> {{ user.name }} </li>
+		 {% endfor %}
+	       </ul>
+               <label>Pending members</label><br />
+	       <ul>
+                 {% for user in team_users %}
+		 <li> test-accountm </li>
+		 {% endfor %}
+	       </ul>
+               <label>Add members</label><br />
+	       <input list="all-users" placeholder="Start typing...">
+	       <button>Invite</button>
+	       <datalist id="all-users">
+                 {% for user in all_users %}
+		 <option>{{ user.name }}</option>
+		 {% endfor %}
+	       </datalist>
+	       <br />
+	       <br />
+
+	       <button>Leave team</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="title">Team invites<br />
+
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-sm-12 col-lg-12">
+	       <ul>
+                 {% for user in team_users %}
+		 <li> Team A <button>Accept</button> </li>
+		 {% endfor %}
+	       </ul>
+               <br />
+	       <button>Create new team</button>
+
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+</script>
+{% endblock %}
