@@ -158,14 +158,21 @@ def sign_up():
             'auth.user_confirm_email', token=token, _external=True
         )
         subject = "Confirm your email for signing-up to RAMP"
-        body = ('Hi {}, \n\n Click on the following link to confirm your email'
-                ' address and finalize your sign-up to RAMP.\n\n '
-                'Please note that your signup request will be approved '
-                'after you send your proof of student status and expected '
-                'date of graduation to Jiao Li (li.jiao@huawei.com). \n\n'
-                .format(user.firstname))
-        body += recover_url
-        body += '\n\nSee you on the RAMP website!'
+        body = (f'Dear {user.firstname}, \n\n'
+                f'Click on the following link to confirm your email'
+                f' address and finalize your sign-up to RAMP.\n\n '
+                f'   {recover_url} \n\n'
+                f'Please note that your signup request will be approved '
+                f'after you send your proof of student status and expected '
+                f'date of graduation to Jiao Li (li.jiao@huawei.com). \n\n'
+                f'Please also note that by signing up, you accept the Terms of '
+                f'Use [1], the Privacy Notice [2], and the Cookies Policy [3].\n\n'
+                f' [1] https://xianti.fr/terms-of-usage \n'
+                f' [2] https://xianti.fr/privacy-policy \n'
+                f' [3] https://xianti.fr/cookies-policy \n\n'
+                f'See you on the RAMP website!\n'
+                f'The Huawei - RAMP team'
+                )
         send_mail(user.email, subject, body)
         logger.info(
             '{} has signed-up to RAMP'.format(user.name)
