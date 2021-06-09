@@ -14,7 +14,7 @@ from sqlalchemy import sql
 
 from .base import Model
 
-__all__ = ['Team']
+__all__ = ['Team', 'UserTeam']
 
 
 class Team(Model):
@@ -71,6 +71,10 @@ class Team(Model):
     def __repr__(self):
         return ('Team(name={}, admin_name={})'
                 .format(self.name, self.admin.name))
+
+    def is_individual_team(self, user_name: str) -> bool:
+        """Check whether it's an individual team name"""
+        return self.name == user_name
 
 
 class UserTeam(Model):

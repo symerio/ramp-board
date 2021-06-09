@@ -26,6 +26,7 @@ from ramp_database.testing import create_test_db
 from ramp_database.tools.team import ask_sign_up_team
 from ramp_database.tools.team import delete_event_team
 from ramp_database.tools.team import sign_up_team
+from ramp_database.tools.team import add_team
 
 
 @pytest.fixture
@@ -43,6 +44,16 @@ def session_scope_function(database_connection):
         shutil.rmtree(deployment_dir, ignore_errors=True)
         db, _ = setup_db(database_config['sqlalchemy'])
         Model.metadata.drop_all(db)
+
+
+def test_add_team(session_scope_function):
+    session = session_scope_function
+    team_name, username = 'new_team', 'test_user'
+
+    team = add_team(session, team_name, username)
+
+    session.delete(team)
+    session.commit()
 
 
 def test_ask_sign_up_team(session_scope_function):

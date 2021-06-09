@@ -7,22 +7,21 @@
 
 {% block content %}
 
-{% with messages = get_flashed_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 <div class="modal fade modal-warning" id="formerror" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
   aria-hidden="true">
+  {% for category, message in messages %}
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
             aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabel">Login Error</h4>
+        <h4 class="modal-title" id="myModalLabel">{{ category }}</h4>
       </div>
       <div class="modal-body">
         <div class="modal-message">
-          {% for message in messages %}
           {{ message }}
-          {% endfor %}
         </div>
       </div>
       <div class="modal-footer">
@@ -30,7 +29,9 @@
       </div>
     </div>
   </div>
+  {% endfor %}
 </div>
+
 {% endif %}
 {% endwith %}
 
@@ -47,35 +48,40 @@
         <div class="card-body">
           <div class="row">
             <div class="col-sm-12 col-lg-12">
-               <label>Team name</label>
-	       <input id="name" name="name" required minlength="4" value="{{ event_team.team.name }}">
-	       <button>Update</button><br />
-	       <label>Team id:</label>  {{ event_team.team.id }} <br />
-	       <!-- <label>Team admin:</label>  {{ event_team.team.admin.name }} <br /> -->
-               <label>Members</label><br />
-	       <ul>
-                 {% for user in team_users %}
-		 <li> {{ user.name }} </li>
-		 {% endfor %}
-	       </ul>
-               <label>Pending members</label><br />
-	       <ul>
-                 {% for user in team_users %}
-		 <li> test-accountm </li>
-		 {% endfor %}
-	       </ul>
-               <label>Add members</label><br />
-	       <input list="all-users" placeholder="Start typing...">
-	       <button>Invite</button>
-	       <datalist id="all-users">
-                 {% for user in all_users %}
-		 <option>{{ user.name }}</option>
-		 {% endfor %}
-	       </datalist>
-	       <br />
-	       <br />
+	       {% if individual_team %}
+	         You are participating in this event as an individual.
+		 {{ event_team }}
+	       {% else %}
+                 <label>Team name</label>
+	         <input id="name" name="name" required minlength="4" value="{{ event_team.team.name }}">
+	         <button>Update</button><br />
+	         <label>Team id:</label>  {{ event_team.team.id }} <br />
+	         <!-- <label>Team admin:</label>  {{ event_team.team.admin.name }} <br /> -->
+                 <label>Members</label><br />
+	         <ul>
+                   {% for user in team_users %}
+	           <li> {{ user.name }} </li>
+	           {% endfor %}
+	         </ul>
+                 <label>Pending members</label><br />
+	         <ul>
+                   {% for user in team_users %}
+	           <li> test-accountm </li>
+	           {% endfor %}
+	         </ul>
+                 <label>Add members</label><br />
+	         <input list="all-users" placeholder="Start typing...">
+	         <button>Invite</button>
+	         <datalist id="all-users">
+                   {% for user in all_users %}
+	           <option>{{ user.name }}</option>
+	           {% endfor %}
+	         </datalist>
+	         <br />
+	         <br />
 
-	       <button>Leave team</button>
+	         <button>Leave team</button>
+	       {% endif %}
             </div>
           </div>
         </div>
@@ -92,13 +98,24 @@
         <div class="card-body">
           <div class="row">
             <div class="col-sm-12 col-lg-12">
+	       <div>
+	       {% if team_invites %}
 	       <ul>
-                 {% for user in team_users %}
-		 <li> Team A <button>Accept</button> </li>
+                 {% for team in team_invites %}
+		 <li> {{ team.name }} <button>Accept</button> </li>
 		 {% endfor %}
 	       </ul>
+	       {% else %}
+	       You don't have any new team invites.
+	       {% endif %}
+	       </div>
                <br />
-	       <button>Create new team</button>
+
+	       <form name="create_new_team" method="POST">
+	       <label for="new_team_name">Create new team</label>
+	       <input type="text" id="new_team_name" name="new_team_name" required minlength="2" maxlength="19">
+	       <input type='submit' value="Submit">
+	       </form>
 
             </div>
           </div>
@@ -111,5 +128,8 @@
 
 {% block scripts %}
 <script>
+$(() => {
+   $("#formerror").modal("toggle");
+});
 </script>
 {% endblock %}

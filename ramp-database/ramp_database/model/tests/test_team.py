@@ -37,6 +37,8 @@ def test_team_model(session_scope_module):
                     repr(team))
     assert re.match(r'Team\(.*test_user.*\)', str(team))
 
+    assert team.is_individual_team('test_user') is True
+
 
 @pytest.mark.parametrize(
     'backref, expected_type',
