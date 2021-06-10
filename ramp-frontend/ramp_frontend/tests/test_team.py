@@ -12,10 +12,11 @@ from ramp_database.testing import create_toy_db
 from ramp_database.utils import setup_db
 from ramp_database.utils import session_scope
 
-from ramp_database.tools.user import add_user
+from ramp_database.tools.user import add_user, delete_user
 from ramp_database.tools.event import add_event
 from ramp_database.tools.event import delete_event
 from ramp_database.tools.team import sign_up_team
+from ramp_database.tools._query import select_event_team_by_user_name
 
 from ramp_frontend import create_app
 from ramp_frontend.testing import login_scope
@@ -48,24 +49,49 @@ def client_session(database_connection):
 @pytest.fixture(scope='function')
 def makedrop_event(client_session):
     _, session = client_session
-    add_event(session, 'iris', 'iris_test_4event', 'iris_test_4event',
+    add_event(session, 'iris', 'iris_new_event2', 'iris_new_event2',
               'starting_kit', '/tmp/databoard_test/submissions',
               is_public=True)
-    yield
-    delete_event(session, 'iris_test_4event')
+    yield "iris_new_event2"
+    delete_event(session, 'iris_new_event2')
 
 
-def test_team_get(client_session):
-    client, session = client_session
-
+@pytest.fixture(scope='function')
+def makedrop_user(client_session):
+    _, session = client_session
     add_user(session, 'new_user', 'new_user', 'new_user',
              'new_user', 'new_user', access_level='user')
-    add_event(session, 'iris', 'iris_new_event', 'new_event', 'starting_kit',
-              '/tmp/databoard_test/submissions', is_public=True)
+    yield "new_user"
+    delete_user(session, 'new_user')
+
+
+def test_team_get(client_session, makedrop_event, makedrop_user):
+    client, session = client_session
+    event_name = makedrop_event
+    user_name = makedrop_user
 
     # user signed up and approved for the event
-    sign_up_team(session, 'iris_new_event', 'new_user')
-    with login_scope(client, 'new_user', 'new_user') as client:
-        rv = client.get('/events/iris_new_event/team')
+    sign_up_team(session, event_name, user_name)
+    with login_scope(client, user_name, user_name) as client:
+        rv = client.get(f'/events/{event_name}/team')
         assert rv.status_code == 200
         assert b'My teams' in rv.data
+
+
+def test_leave_teams(client_session, makedrop_event, makedrop_user):
+    client, session = client_session
+    event_name = makedrop_event
+    user_name = makedrop_user
+
+    # user signed up and approved for the event
+    sign_up_team(session, event_name, user_name)
+    with login_scope(client, user_name, user_name) as client:
+        rv = client.post(f'/events/{event_name}/team/leave')
+        assert rv.status_code == 302
+        assert rv.location.endswith(f"/events/{event_name}/team")
+
+    # The user is still associated to an individual team
+    event_team = select_event_team_by_user_name(
+        session, event_name, user_name
+    )
+    assert event_team.team.is_individual_team(user_name)

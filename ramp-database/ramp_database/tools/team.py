@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import List
 
 from ..model import EventTeam, Team, UserTeam, Event, User
 
@@ -7,6 +8,7 @@ from .submission import add_submission
 
 from ._query import select_event_by_name
 from ._query import select_event_team_by_name
+from ._query import select_event_team_by_user_name
 from ._query import select_team_by_name
 from ._query import select_user_by_name
 
@@ -18,6 +20,9 @@ def add_team(session, team_name: str, user_name: str) -> Team:
 
     Note that the behavior will change depending on whether it's
     an individual team (i.e. team_name == user_name) or not.
+
+    NOTE: before creating a non individual team, you need to leave
+    all current teams for the current event with :func:`leave_all_teams`.
 
     Parameters
     ----------
@@ -35,6 +40,7 @@ def add_team(session, team_name: str, user_name: str) -> Team:
     """
     user = select_user_by_name(session, user_name)
     team = Team(name=team_name, admin=user)
+    logger.info(f'Created {team} by {user}')
     session.add(team)
     session.commit()
 
@@ -153,7 +159,7 @@ def delete_event_team(session, event_name, team_name):
     session.commit()
 
 
-def get_event_team_by_name(session, event_name, user_name):
+def get_event_team_by_name(session, event_name, team_name):
     """Get the event/team given an event and a user.
 
     Parameters
@@ -170,4 +176,76 @@ def get_event_team_by_name(session, event_name, user_name):
     event_team : :class:`ramp_database.model.EventTeam`
         The event/team instance queried.
     """
-    return select_event_team_by_name(session, event_name, user_name)
+    return select_event_team_by_name(session, event_name, team_name)
+
+
+def get_event_team_by_user_name(session, event_name, user_name):
+    """Get the event/team given an event and a user.
+
+    Parameters
+    ----------
+    session : :class:`sqlalchemy.orm.Session`
+        The session to directly perform the operation on the database.
+    event_name : str
+        The RAMP event name.
+    team_name : str
+        The name of the team.
+
+    Returns
+    -------
+    event_team : :class:`ramp_database.model.EventTeam`
+        The event/team instance queried.
+    """
+    return select_event_team_by_user_name(session, event_name, user_name)
+
+
+def add_team_member(session, team_name: str, user_name: str, status='asked') -> List[str]:
+    """Add a member to the team
+
+    Parameters
+    ----------
+    session : :class:`sqlalchemy.orm.Session`
+        The session to directly perform the operation on the database.
+    team_name : str
+        The name of the team.
+    user_name : str
+        The name of the user.
+    status: str
+
+    Returns
+    -------
+    errors :
+        A list with errors. An empty list if the addition succeded.
+    """
+    team = select_team_by_name(session, team_name)
+    user = select_user_by_name(session, user_name)
+    individual_team = select_team_by_name(session, user_name)
+    if (
+            team.is_individual_team(user.name)
+            or team.is_individual_team(team.admin.name)
+        ):
+        return [f'Cannot add members to an individual Team({team_name})']
+
+    event_team = session.query(EventTeam).filter_by(team_id=team.id).one_or_none()
+    event = None
+    if event_team is not None:
+        # Team is signed up to an event. Make sure the user is also signed up to the same event,
+        # otherwise they cannot be added to the team
+        event = event_team.event
+        if (session.query(EventTeam)
+            .filter_by(event_id=event_team.event.id, team_id=individual_team.id)
+            .count() == 0):
+            return [(f"{team} is signed up to {event} however {user} isn't signed up "
+                     f"to this event. Therefore cannot invite them.")]
+
+    if (session.query(UserTeam)
+        .filter_by(user=user, team=team)
+        .count()):
+        logging.info(f'add_team_member: {user} is already in {team}. Skipping')
+
+
+    logging.info(f'Adding {user} to {team} both belonging to {event}')
+    user_team = UserTeam(user_id=user.id, team_id=team.id, status=status)
+    session.add(user_team)
+    session.commit()
+    return []

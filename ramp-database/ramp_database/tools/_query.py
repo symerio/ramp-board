@@ -165,13 +165,13 @@ def select_event_team_by_user_name(
     """
     event = select_event_by_name(session, event_name)
     user = select_user_by_name(session, user_name)
+    if event is None or user is None:
+        return None
 
     event_team =  (session.query(EventTeam)
                    .filter(EventTeam.event == event)
-                   .filter(EventTeam.team_id == Team.id)
-                   .filter(UserTeam.team_id == Team.id)
-                   .filter(UserTeam.user_id == User.id)
-                   .filter(User.name == user_name)
+                   .filter(EventTeam.team_id == UserTeam.team_id)
+                   .filter(UserTeam.user == user)
                    .filter(UserTeam.status == "accepted")
                    .first())
 

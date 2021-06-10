@@ -70,17 +70,21 @@
 	           {% endfor %}
 	         </ul>
                  <label>Add members</label><br />
-	         <input list="all-users" placeholder="Start typing...">
-	         <button>Invite</button>
+		 <form name="invite_team_member" action="/events/{{ event_team.event.name }}/team/add-user" method="POST">
+	         <input list="all-users" name='invite_user_name' placeholder="Start typing...">
+	         <input type='submit' value="Invite">
 	         <datalist id="all-users">
                    {% for user in all_users %}
 	           <option>{{ user.name }}</option>
 	           {% endfor %}
 	         </datalist>
+	         </form>
 	         <br />
 	         <br />
 
-	         <button>Leave team</button>
+		 <form name="create_new_team" action="/events/{{ event_team.event.name }}/team/leave" method="POST">
+	       <input type='submit' value="Leave team">
+	       </form>
 	       {% endif %}
             </div>
           </div>

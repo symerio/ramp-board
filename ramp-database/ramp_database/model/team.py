@@ -100,7 +100,13 @@ class UserTeam(Model):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship('User',
+                        backref=backref('user_user_team',
+                                        cascade="all, delete"))
     team_id = Column(Integer, ForeignKey('teams.id'))
+    team = relationship('Team',
+                        backref=backref('team_user_team',
+                                        cascade="all, delete"))
     status = Column(
         Enum('asked', 'accepted', 'admin', name='status'),
         default='asked'

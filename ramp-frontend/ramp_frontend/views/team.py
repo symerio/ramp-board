@@ -8,14 +8,15 @@ from flask import (
     render_template,
     request,
     flash,
+    redirect,
+    url_for
 )
 
 from ramp_database.tools.frontend import is_accessible_code
 from ramp_database.tools.frontend import is_accessible_event
 from ramp_database.tools.user import get_team_by_name
-from ramp_database.tools.team import add_team, sign_up_team, leave_all_teams
+from ramp_database.tools.team import add_team, sign_up_team, leave_all_teams, get_event_team_by_user_name, add_team_member
 from ramp_database.tools._query import (
-    select_event_team_by_user_name,
     select_team_invites_by_user_name,
 )
 from ramp_database.model import User
@@ -27,6 +28,18 @@ from .redirect import redirect_to_user
 mod = Blueprint('team', __name__)
 logger = logging.getLogger('RAMP-FRONTEND')
 
+def _validate_team_request(session, event_name: str, user):
+    if not is_accessible_event(session, event_name,
+                               user.name):
+        return redirect_to_user(
+            f'{user.firstname}: no '
+            f'event named "{event_name}"'
+        )
+    if not is_accessible_code(session, event_name, user.name):
+        error_str = (f'No access to my submissions for event {event_name}. '
+                     f'If you have already signed up, please wait for '
+                     f'approval.')
+        return redirect_to_user(error_str)
 
 @mod.route("/events/<event_name>/team", methods=['GET', 'POST'])
 @flask_login.login_required
@@ -38,20 +51,10 @@ def my_teams(event_name):
     event_name : str
         The name of the event.
     """
-    if not is_accessible_event(db.session, event_name,
-                               flask_login.current_user.name):
-        return redirect_to_user(
-            f'{flask_login.current_user.firstname}: no '
-            f'event named "{event_name}"'
-        )
-    if not is_accessible_code(db.session, event_name,
-                              flask_login.current_user.name):
-        error_str = (f'No access to my submissions for event {event_name}. '
-                     f'If you have already signed up, please wait for '
-                     f'approval.')
-        return redirect_to_user(error_str)
-
     current_user = flask_login.current_user
+    res = _validate_team_request(db.session, event_name, current_user)
+    if res is not None:
+        return res
 
     if request.method == 'POST':
         team_name = request.form['new_team_name']
@@ -60,11 +63,11 @@ def my_teams(event_name):
         if team is not None:
             flash(f"Team {team_name} already exists! Choose a different name.")
         else:
-            leave_all_teams(db.session, event_name, team_name)
+            leave_all_teams(db.session, event_name, current_user.name)
             team = add_team(db.session, team_name, current_user.name)
             sign_up_team(db.session, event_name, team.name)
 
-    event_team = select_event_team_by_user_name(
+    event_team = get_event_team_by_user_name(
         db.session, event_name, current_user.name
     )
 
@@ -81,6 +84,54 @@ def my_teams(event_name):
     return render_template('my_teams.html',
                            event_team=event_team,
                            team_users=team_users,
+                           team_invites=team_invites,
                            all_users=all_users,
                            individual_team=individual_team,
                            msg="test")
+
+@mod.route("/events/<event_name>/team/leave", methods=['POST'])
+@flask_login.login_required
+def leave_teams(event_name):
+    """Leave all non individual teams
+
+    Parameters
+    ----------
+    event_name : str
+        The name of the event.
+    """
+    current_user = flask_login.current_user
+    res = _validate_team_request(db.session, event_name, current_user)
+    if res is not None:
+        return res
+    leave_all_teams(db.session, event_name, flask_login.current_user.name)
+    return redirect(url_for("team.my_teams", event_name=event_name))
+
+
+@mod.route("/events/<event_name>/team/add-user", methods=['POST'])
+@flask_login.login_required
+def add_team_members(event_name):
+    """Leave all non individual teams
+
+    Parameters
+    ----------
+    event_name : str
+        The name of the event.
+    """
+    user_name_to_add = request.form['invite_user_name']
+
+    current_user = flask_login.current_user
+    res = _validate_team_request(db.session, event_name, current_user)
+    if res is not None:
+        return res
+    event_team = get_event_team_by_user_name(
+        db.session, event_name, current_user.name
+    )
+
+    user = db.session.query(User).filter_by(name=user_name_to_add).one_or_none()
+
+    if event_team is None:
+        return {'errors': [f'{user} is not signed up to {event_team.event}.']}
+    errors = add_team_member(db.session, event_team.team.name, user.name)
+    if errors:
+        flash("\n".join(errors))
+    return redirect(url_for("team.my_teams", event_name=event_name))
