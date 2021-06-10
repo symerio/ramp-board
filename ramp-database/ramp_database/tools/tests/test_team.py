@@ -33,6 +33,7 @@ from ramp_database.tools.team import add_team
 from ramp_database.tools.team import leave_all_teams
 from ramp_database.tools.team import add_team_member
 from ramp_database.tools.team import get_team_members
+from ramp_database.tools.team import respond_team_invite
 
 
 @pytest.fixture
@@ -177,8 +178,13 @@ def test_add_team_member(session_scope_function):
 
     team = add_team(session, team_name, username, is_individual=False)
 
-    members = get_team_members(session, team_name)
-    assert len(members) == 1
+    assert len(get_team_members(session, team_name, status='accepted')) == 1
+    assert len(get_team_members(session, team_name, status='asked')) == 0
+
+    err = add_team_member(session, team_name, "test_user_2", status='asked')
+    assert err == []
+    assert len(get_team_members(session, team_name, status='accepted')) == 1
+    assert len(get_team_members(session, team_name, status='asked')) == 1
 
     err = add_team_member(session, username, username)
     assert err == ['Cannot add members to an individual Team(test_user)']

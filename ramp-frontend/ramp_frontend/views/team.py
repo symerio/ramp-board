@@ -17,12 +17,14 @@ from ramp_database.tools.frontend import is_accessible_event
 from ramp_database.tools.user import get_team_by_name
 from ramp_database.tools.team import (
         add_team, sign_up_team, leave_all_teams, get_event_team_by_user_name, add_team_member,
-        get_team_members
+        get_team_members,
+        respond_team_invite
 )
 from ramp_database.tools._query import (
     select_team_invites_by_user_name,
 )
 from ramp_database.model import User
+from ramp_database.model import Team
 
 from ramp_frontend import db
 
@@ -135,4 +137,28 @@ def add_team_members(event_name):
     errors = add_team_member(db.session, event_team.team.name, user.name)
     if errors:
         flash("\n".join(errors))
+    return redirect(url_for("team.my_teams", event_name=event_name))
+
+
+
+@mod.route("/events/<event_name>/team/invites", methods=['POST'])
+@flask_login.login_required
+def manage_team_invites(event_name):
+    """Accept or reject team invites
+
+    Parameters
+    ----------
+    event_name : str
+        The name of the event.
+    """
+    team_id = request.form['team_id']
+
+    current_user = flask_login.current_user
+    res = _validate_team_request(db.session, event_name, current_user)
+    if res is not None:
+        return res
+    team_id = int(team_id)
+
+    team = db.session.query(Team).filter_by(id=team_id).one_or_none()
+    respond_team_invite(db.session, current_user.name, team.name, action='accept')
     return redirect(url_for("team.my_teams", event_name=event_name))

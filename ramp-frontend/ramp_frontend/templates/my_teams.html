@@ -107,7 +107,13 @@
 	       {% if team_invites %}
 	       <ul>
                  {% for team in team_invites %}
-		 <li> {{ team.name }} <button>Accept</button> </li>
+		 <li>
+		   <form name="create_new_team_{{ team.id }}" action="/events/{{ event_team.event.name }}/team/invites" method="POST">
+		   <input type="text" name="team_id" value='{{ team.id }}' hidden>
+		   <label>{{ team.name }}</label>
+	           <input type='submit' value="Accept">
+	           </form>
+		 </li>
 		 {% endfor %}
 	       </ul>
 	       {% else %}

@@ -276,8 +276,40 @@ def get_team_members(session, team_name: str, status='accepted') -> List[Team]:
                .filter(User.id == UserTeam.user_id)
                .filter(UserTeam.team_id == team.id)
                .filter(UserTeam.status == status)
-               .filter(User.id != team.admin.id)  # remove duplicate users
                .distinct().all())
-    if status == 'accepted':
-        members.insert(0, team.admin)
     return list(set(members))
+
+
+def respond_team_invite(session, user_name: str,  team_name: str, action: str):
+    """Respond to a team invite
+
+    Either by accepting or declining.
+
+    Parameters
+    ----------
+    session : :class:`sqlalchemy.orm.Session`
+        The session to directly perform the operation on the database.
+    team_name : str
+        The name of the team.
+    action: str
+        Either accept or decline the invite. One of ['accept', 'decline'].
+    """
+    user_team = (session.query(UserTeam)
+             .filter(User.id == UserTeam.user_id)
+             .filter(Team.id == UserTeam.team_id)
+             .filter(User.name == user_name)
+             .filter(Team.name == team_name)
+             .filter(UserTeam.status == "asked")
+             .one_or_none())
+    if user_team is None:
+        raise ValueError(f"Could not find invites for User({user}) "
+                         f"to Team({team})")
+    if action == 'accept':
+        user_team.status = "accepted"
+        session.add(user_team)
+    elif action == 'decline':
+        session.delete(user_team)
+    else:
+        raise ValueError(f"unknown action={action} expected one of "
+                         f"['accept', 'decline']")
+    session.commit()
