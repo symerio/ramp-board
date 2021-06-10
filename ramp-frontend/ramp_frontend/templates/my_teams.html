@@ -48,9 +48,8 @@
         <div class="card-body">
           <div class="row">
             <div class="col-sm-12 col-lg-12">
-	       {% if individual_team %}
+	       {% if event_team.team.is_individual %}
 	         You are participating in this event as an individual.
-		 {{ event_team }}
 	       {% else %}
                  <label>Team name</label>
 	         <input id="name" name="name" required minlength="4" value="{{ event_team.team.name }}">
@@ -59,16 +58,18 @@
 	         <!-- <label>Team admin:</label>  {{ event_team.team.admin.name }} <br /> -->
                  <label>Members</label><br />
 	         <ul>
-                   {% for user in team_users %}
+                   {% for user in team_members %}
 	           <li> {{ user.name }} </li>
 	           {% endfor %}
 	         </ul>
+		 {% if asked_members %}
                  <label>Pending members</label><br />
 	         <ul>
-                   {% for user in team_users %}
-	           <li> test-accountm </li>
+                   {% for user in asked_members %}
+		   <li> {{ user.name }} </li>
 	           {% endfor %}
 	         </ul>
+		 {% endif %}
                  <label>Add members</label><br />
 		 <form name="invite_team_member" action="/events/{{ event_team.event.name }}/team/add-user" method="POST">
 	         <input list="all-users" name='invite_user_name' placeholder="Start typing...">

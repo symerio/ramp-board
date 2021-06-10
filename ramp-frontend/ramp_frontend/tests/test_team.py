@@ -94,4 +94,4 @@ def test_leave_teams(client_session, makedrop_event, makedrop_user):
     event_team = select_event_team_by_user_name(
         session, event_name, user_name
     )
-    assert event_team.team.is_individual_team(user_name)
+    assert event_team.team.is_individual

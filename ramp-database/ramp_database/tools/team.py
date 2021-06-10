@@ -15,7 +15,7 @@ from ._query import select_user_by_name
 logger = logging.getLogger('RAMP-DATABASE')
 
 
-def add_team(session, team_name: str, user_name: str) -> Team:
+def add_team(session, team_name: str, user_name: str, is_individual: bool=True) -> Team:
     """Create a new team
 
     Note that the behavior will change depending on whether it's
@@ -32,6 +32,8 @@ def add_team(session, team_name: str, user_name: str) -> Team:
         The RAMP event name.
     user_name : str
         The name of admin user
+    is_individual : bool
+        This is an individual team
 
     Returns
     -------
@@ -39,13 +41,12 @@ def add_team(session, team_name: str, user_name: str) -> Team:
         The created team.
     """
     user = select_user_by_name(session, user_name)
-    team = Team(name=team_name, admin=user)
+    team = Team(name=team_name, admin=user, is_individual=is_individual)
     logger.info(f'Created {team} by {user}')
     session.add(team)
     session.commit()
 
-    is_individual_team = (team_name == user.name)
-    if not is_individual_team:
+    if not is_individual:
         user_team = UserTeam(team_id=team.id, user_id=user.id, status='accepted')
         session.add(user_team)
 
@@ -211,6 +212,7 @@ def add_team_member(session, team_name: str, user_name: str, status='asked') -> 
     user_name : str
         The name of the user.
     status: str
+        Membership status.
 
     Returns
     -------
@@ -220,10 +222,7 @@ def add_team_member(session, team_name: str, user_name: str, status='asked') -> 
     team = select_team_by_name(session, team_name)
     user = select_user_by_name(session, user_name)
     individual_team = select_team_by_name(session, user_name)
-    if (
-            team.is_individual_team(user.name)
-            or team.is_individual_team(team.admin.name)
-        ):
+    if team.is_individual:
         return [f'Cannot add members to an individual Team({team_name})']
 
     event_team = session.query(EventTeam).filter_by(team_id=team.id).one_or_none()
@@ -249,3 +248,36 @@ def add_team_member(session, team_name: str, user_name: str, status='asked') -> 
     session.add(user_team)
     session.commit()
     return []
+
+
+def get_team_members(session, team_name: str, status='accepted') -> List[Team]:
+    """Get team members
+
+    Parameters
+    ----------
+    session : :class:`sqlalchemy.orm.Session`
+        The session to directly perform the operation on the database.
+    team_name : str
+        The name of the team.
+    status: str
+        With a given status
+
+    Returns
+    -------
+    teams:
+       a list of teams.
+    """
+    if status not in ['asked', 'accepted']:
+        raise ValueError(f"status={status} must be one of ['asked', 'accepted']")
+    team = session.query(Team).filter_by(name=team_name).one_or_none()
+    if team is None:
+        return []
+    members = (session.query(User)
+               .filter(User.id == UserTeam.user_id)
+               .filter(UserTeam.team_id == team.id)
+               .filter(UserTeam.status == status)
+               .filter(User.id != team.admin.id)  # remove duplicate users
+               .distinct().all())
+    if status == 'accepted':
+        members.insert(0, team.admin)
+    return list(set(members))

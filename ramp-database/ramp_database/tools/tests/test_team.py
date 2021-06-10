@@ -32,6 +32,7 @@ from ramp_database.tools.team import sign_up_team
 from ramp_database.tools.team import add_team
 from ramp_database.tools.team import leave_all_teams
 from ramp_database.tools.team import add_team_member
+from ramp_database.tools.team import get_team_members
 
 
 @pytest.fixture
@@ -70,7 +71,7 @@ def test_add_signup_leave_team(session_scope_function):
     team_name, username = 'new_team', 'test_user'
     event_name = "iris_test"
 
-    team = add_team(session, team_name, username)
+    team = add_team(session, team_name, username, is_individual=False)
     team_id = team.id
     # A UserTeam entry was created because this is not an individual team
     query = lambda: session.query(UserTeam).filter_by(team_id=team.id).count()
@@ -89,7 +90,7 @@ def test_add_signup_leave_team(session_scope_function):
     assert query() == 0
     # The individual team is then returned for this event
     event_team = select_event_team_by_user_name(session, event_name, username)
-    assert event_team.team.is_individual_team(username) is True
+    assert event_team.team.is_individual is True
 
     session.delete(team)
     session.commit()
@@ -174,7 +175,10 @@ def test_add_team_member(session_scope_function):
     session = session_scope_function
     team_name, username = 'new_team', 'test_user'
 
-    team = add_team(session, team_name, username)
+    team = add_team(session, team_name, username, is_individual=False)
+
+    members = get_team_members(session, team_name)
+    assert len(members) == 1
 
     err = add_team_member(session, username, username)
     assert err == ['Cannot add members to an individual Team(test_user)']

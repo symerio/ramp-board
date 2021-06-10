@@ -15,7 +15,10 @@ from flask import (
 from ramp_database.tools.frontend import is_accessible_code
 from ramp_database.tools.frontend import is_accessible_event
 from ramp_database.tools.user import get_team_by_name
-from ramp_database.tools.team import add_team, sign_up_team, leave_all_teams, get_event_team_by_user_name, add_team_member
+from ramp_database.tools.team import (
+        add_team, sign_up_team, leave_all_teams, get_event_team_by_user_name, add_team_member,
+        get_team_members
+)
 from ramp_database.tools._query import (
     select_team_invites_by_user_name,
 )
@@ -64,29 +67,27 @@ def my_teams(event_name):
             flash(f"Team {team_name} already exists! Choose a different name.")
         else:
             leave_all_teams(db.session, event_name, current_user.name)
-            team = add_team(db.session, team_name, current_user.name)
+            team = add_team(db.session, team_name, current_user.name, is_individual=False)
             sign_up_team(db.session, event_name, team.name)
 
     event_team = get_event_team_by_user_name(
         db.session, event_name, current_user.name
     )
 
-    team_users = [event_team.team.admin]
+    team_members = get_team_members(db.session, event_team.team.name, status='accepted')
+    asked_members = get_team_members(db.session, event_team.team.name, status='asked')
     # TODO: these should be only users that signed up to the event
     all_users = User.query.filter(User.id != current_user.id).all()
-    individual_team = event_team.team.is_individual_team(
-        current_user.name
-    )
     team_invites = select_team_invites_by_user_name(
         db.session, event_name, current_user.name
     )
 
     return render_template('my_teams.html',
                            event_team=event_team,
-                           team_users=team_users,
+                           team_members=team_members,
+                           asked_members=asked_members,
                            team_invites=team_invites,
                            all_users=all_users,
-                           individual_team=individual_team,
                            msg="test")
 
 @mod.route("/events/<event_name>/team/leave", methods=['POST'])

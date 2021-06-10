@@ -176,6 +176,9 @@ class Submission(Model):
     test_time_cv_std = Column(Float, default=0.0)
     # the maximum memory size used when training/testing, in MB
     max_ram = Column(Float, default=0.0)
+    # This is intentionally optional not a ForeignKey, to avoid DB migration
+    # issues. This field is mostly used for audits.
+    user_name = Column(String)
     # later also ramp_id
     UniqueConstraint(event_team_id, name, name='ts_constraint')
 

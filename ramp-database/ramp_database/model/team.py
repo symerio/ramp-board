@@ -26,6 +26,8 @@ class Team(Model):
         The name of the team.
     admin : :class:`ramp_database.model.User`
         The admin user of the team.
+    is_individual : bool
+        This team is an individual team.
 
     Attributes
     ----------
@@ -37,14 +39,6 @@ class Team(Model):
         The ID of the admin user.
     admin : :class:`ramp_database.model.User`
         The admin user instance.
-    initiator_id : int
-        The ID of the team asking for merging.
-    initiator : :class:`ramp_database.model.Team`
-        The team instance asking for merging.
-    acceptor_id : int
-        The ID of the team accepting the merging.
-    acceptor : :class:`ramp_database.model.Team`
-        The team instance accepting the merging.
     team_events : :class:`ramp_database.model.EventTeam`
         A back-reference to the events to which the team is enroll.
     """
@@ -58,12 +52,14 @@ class Team(Model):
                          backref=backref('admined_teams',
                                          cascade="all, delete"))
 
+    is_individual = Column(Boolean, default=True, nullable=False)
     creation_timestamp = Column(DateTime, nullable=False)
 
-    def __init__(self, name, admin):
+    def __init__(self, name, admin, is_individual=True):
         self.name = name
         self.admin = admin
         self.creation_timestamp = datetime.datetime.utcnow()
+        self.is_individual = is_individual
 
     def __str__(self):
         return 'Team({})'.format(self.name)
@@ -71,10 +67,6 @@ class Team(Model):
     def __repr__(self):
         return ('Team(name={}, admin_name={})'
                 .format(self.name, self.admin.name))
-
-    def is_individual_team(self, user_name: str) -> bool:
-        """Check whether it's an individual team name"""
-        return self.name == user_name
 
 
 class UserTeam(Model):
@@ -111,12 +103,10 @@ class UserTeam(Model):
         Enum('asked', 'accepted', 'admin', name='status'),
         default='asked'
     )
-    is_active = Column(Boolean, default=True, nullable=False)
     update_timestamp = Column(DateTime, onupdate=sql.func.now(),
                               server_default=sql.func.now())
 
-    def __init__(self, user_id, team_id, status='asked', is_active=False):
+    def __init__(self, user_id, team_id, status='asked'):
         self.user_id = user_id
         self.team_id = team_id
         self.status = status
-        self.is_active = is_active
