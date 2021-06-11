@@ -160,5 +160,5 @@ def manage_team_invites(event_name):
     team_id = int(team_id)
 
     team = db.session.query(Team).filter_by(id=team_id).one_or_none()
-    respond_team_invite(db.session, current_user.name, team.name, action='accept')
+    respond_team_invite(db.session, event_name, current_user.name, team.name, action='accept')
     return redirect(url_for("team.my_teams", event_name=event_name))

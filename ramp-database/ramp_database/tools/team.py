@@ -280,7 +280,7 @@ def get_team_members(session, team_name: str, status='accepted') -> List[Team]:
     return list(set(members))
 
 
-def respond_team_invite(session, user_name: str,  team_name: str, action: str):
+def respond_team_invite(session, event_name: str, user_name: str,  team_name: str, action: str):
     """Respond to a team invite
 
     Either by accepting or declining.
@@ -289,6 +289,8 @@ def respond_team_invite(session, user_name: str,  team_name: str, action: str):
     ----------
     session : :class:`sqlalchemy.orm.Session`
         The session to directly perform the operation on the database.
+    event_name : str
+        The RAMP event name.
     team_name : str
         The name of the team.
     action: str
@@ -305,6 +307,7 @@ def respond_team_invite(session, user_name: str,  team_name: str, action: str):
         raise ValueError(f"Could not find invites for User({user}) "
                          f"to Team({team})")
     if action == 'accept':
+        leave_all_teams(session, event_name, user_name)
         user_team.status = "accepted"
         session.add(user_team)
     elif action == 'decline':
