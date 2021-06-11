@@ -2,6 +2,7 @@
 The :mod:`ramp_frontend.forms` module defines the different forms used on the
 website.
 """
+from typing import List, Tuple
 
 from flask_wtf import FlaskForm
 
@@ -148,7 +149,7 @@ class CodeForm(FlaskForm):
         The place holder containing the name of the submission file and the
         code associated.
     """
-    names_codes = []
+    names_codes: List[Tuple[str, int]] = []
 
 
 class SubmitForm(FlaskForm):
@@ -264,7 +265,7 @@ class CreditForm(FlaskForm):
     """
     note = StringField('submission_name')
     self_credit = StringField('self credit')
-    name_credits = []
+    name_credits: List[str] = []
 
 
 class AskForEventForm(FlaskForm):
