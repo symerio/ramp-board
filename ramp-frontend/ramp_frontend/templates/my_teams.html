@@ -52,8 +52,11 @@
 	         You are participating in this event as an individual.
 	       {% else %}
                  <label>Team name</label>
+		 {{ event_team.team.name }} <br />
+		 <!--
 	         <input id="name" name="name" required minlength="4" value="{{ event_team.team.name }}">
 	         <button>Update</button><br />
+		 -->
 	         <label>Team id:</label>  {{ event_team.team.id }} <br />
 	         <!-- <label>Team admin:</label>  {{ event_team.team.admin.name }} <br /> -->
                  <label>Members</label><br />
