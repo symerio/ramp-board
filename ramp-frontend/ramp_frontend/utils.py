@@ -28,9 +28,11 @@ def body_formatter_user(user):
     user = {user.name}
     name = {user.firstname} {user.lastname}
     email = {user.email}
-    university = {user.university.name}  ({user.university.country})
-    graduation year = {user.graduation_year}
     """
+    if user.university is not None:
+        body += (f"university = {user.university.name} "
+                 f"({user.university.country})\n")
+    body += f"graduation year = {user.graduation_year}"
 
     return body
 

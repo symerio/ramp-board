@@ -262,6 +262,7 @@ class Event(Model):
                 else str(round(self.combined_combined_test_score,
                                self.official_score_type.precision)))
 
+
     @property
     def combined_foldwise_valid_score_str(self):
         """str: Convert to string the combined public score for each fold."""
@@ -302,7 +303,9 @@ class Event(Model):
     @property
     def n_participants(self):
         """int: The number of participants to the event."""
-        return len(self.event_teams)
+        # Only select individual teams
+        return len([event_team for event_team in self.event_teams
+                    if event_team.team.is_individual])
 
 
 class EventScoreType(Model):

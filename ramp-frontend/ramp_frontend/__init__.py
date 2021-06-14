@@ -73,11 +73,13 @@ def create_app(config):
         from .views import general
         from .views import leaderboard
         from .views import ramp
+        from .views import team
         app.register_blueprint(admin.mod)
         app.register_blueprint(auth.mod)
         app.register_blueprint(general.mod)
         app.register_blueprint(leaderboard.mod)
         app.register_blueprint(ramp.mod)
+        app.register_blueprint(team.mod)
 
         # initialize the database
         db.create_all()

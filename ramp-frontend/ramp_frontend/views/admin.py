@@ -101,7 +101,8 @@ def approve_users():
 
             if request.form["submit_button"] == "Approve!":
                 sign_up_team(db.session, asked_event_team.event.name,
-                             asked_event_team.team.name)
+                             team_name=asked_event_team.team.name,
+                             user_name=asked_event_team.team.name)
 
                 subject = ('Signed up for the RAMP event {}'
                            .format(asked_event_team.event.name))
@@ -191,7 +192,7 @@ def approve_sign_up_for_event(event_name, user_name):
     if not event or not user:
         return redirect_to_user('No event {} or no user {}'
                                 .format(event_name, user_name), is_error=True)
-    sign_up_team(db.session, event.name, user.name)
+    sign_up_team(db.session, event.name, team_name=user.name, user_name=user.name)
 
     subject = ('Signed up for the RAMP event {}'
                .format(event.name))

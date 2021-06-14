@@ -17,7 +17,7 @@ from ramp_database.tools.frontend import is_accessible_event
 from ramp_database.tools.frontend import is_accessible_leaderboard
 from ramp_database.tools.frontend import is_user_signed_up
 from ramp_database.tools.user import add_user_interaction
-from ramp_database.tools.team import get_event_team_by_name
+from ramp_database.tools.team import get_event_team_by_user_name
 
 from ramp_frontend import db
 
@@ -59,8 +59,8 @@ def my_submissions(event_name):
         return redirect_to_user(error_str)
 
     # Doesn't work if team mergers are allowed
-    event_team = get_event_team_by_name(db.session, event_name,
-                                        flask_login.current_user.name)
+    event_team = get_event_team_by_user_name(db.session, event_name,
+                                        user_name=flask_login.current_user.name)
     leaderboard_html = event_team.leaderboard_html
     failed_leaderboard_html = event_team.failed_leaderboard_html
     new_leaderboard_html = event_team.new_leaderboard_html
