@@ -92,6 +92,7 @@ def my_teams(event_name):
                            asked_members=asked_members,
                            team_invites=team_invites,
                            all_users=all_users,
+                           event=event_team.event,
                            msg="test")
 
 @mod.route("/events/<event_name>/team/leave", methods=['POST'])
