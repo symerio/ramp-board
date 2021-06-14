@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List
+from typing import List, Optional
 
 from ..model import EventTeam, Team, UserTeam, Event, User
 
@@ -117,7 +117,7 @@ def ask_sign_up_team(session, event_name, team_name):
     return event, team, event_team
 
 
-def sign_up_team(session, event_name, team_name):
+def sign_up_team(session, event_name, team_name, user_name: Optional[str] = None):
     """Register a team to a RAMP event and submit the starting kit.
 
     Parameters
@@ -128,6 +128,9 @@ def sign_up_team(session, event_name, team_name):
         The RAMP event name.
     team_name : str
         The name of the team.
+    user_name : str, default=None
+        Optional user_name to make the submission as for non individual teams.
+        This is only used for audits.
     """
     event, team, event_team = ask_sign_up_team(session, event_name, team_name)
     # setup the sandbox
@@ -136,7 +139,8 @@ def sign_up_team(session, event_name, team_name):
                                            event.ramp_sandbox_name)
     submission_name = event.ramp_sandbox_name
     submission = add_submission(session, event_name, team_name,
-                                submission_name, path_sandbox_submission)
+                                submission_name, path_sandbox_submission,
+                                user_name=user_name)
     logger.info('Copying the submission files into the deployment folder')
     logger.info('Adding {}'.format(submission))
     event_team.approved = True
@@ -280,21 +284,23 @@ def get_team_members(session, team_name: str, status='accepted') -> List[Team]:
     return list(set(members))
 
 
-def respond_team_invite(session, event_name: str, user_name: str,  team_name: str, action: str):
+def respond_team_invite(session, user_name: str,  team_name: str, action: str, event_name: Optional[str] = None):
     """Respond to a team invite
 
-    Either by accepting or declining.
+    Either by accepting or declining. When event_name is not None, the user
+    will leave all other non individual teams.
 
     Parameters
     ----------
     session : :class:`sqlalchemy.orm.Session`
         The session to directly perform the operation on the database.
-    event_name : str
-        The RAMP event name.
     team_name : str
         The name of the team.
     action: str
         Either accept or decline the invite. One of ['accept', 'decline'].
+    event_name : str
+        The RAMP event name. Only used to leave all current teams for the event.
+        If None, no teams will be left.
     """
     user_team = (session.query(UserTeam)
              .filter(User.id == UserTeam.user_id)
@@ -304,10 +310,11 @@ def respond_team_invite(session, event_name: str, user_name: str,  team_name: st
              .filter(UserTeam.status == "asked")
              .one_or_none())
     if user_team is None:
-        raise ValueError(f"Could not find invites for User({user}) "
-                         f"to Team({team})")
+        raise ValueError(f"Could not find invites for User({user_name}) "
+                         f"to Team({team_name})")
     if action == 'accept':
-        leave_all_teams(session, event_name, user_name)
+        if event_name is not None:
+            leave_all_teams(session, event_name, user_name)
         user_team.status = "accepted"
         session.add(user_team)
     elif action == 'decline':

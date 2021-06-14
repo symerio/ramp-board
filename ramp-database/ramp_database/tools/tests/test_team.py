@@ -121,7 +121,7 @@ def test_ask_sign_up_team(session_scope_function):
 def test_sign_up_team(session_scope_function):
     event_name, username = 'iris_test', 'test_user'
 
-    sign_up_team(session_scope_function, event_name, username)
+    sign_up_team(session_scope_function, event_name, team_name=username, user_name=username)
     event_team = session_scope_function.query(EventTeam).all()
     assert len(event_team) == 1
     event_team = event_team[0]
@@ -136,6 +136,7 @@ def test_sign_up_team(session_scope_function):
     submission = submission[0]
     assert submission.name == 'starting_kit'
     assert submission.event_team == event_team
+    assert submission.user_name == username
     submission_file = submission.files[0]
     assert submission_file.name == 'estimator'
     assert submission_file.extension == 'py'
@@ -186,8 +187,33 @@ def test_add_team_member(session_scope_function):
     assert len(get_team_members(session, team_name, status='accepted')) == 1
     assert len(get_team_members(session, team_name, status='asked')) == 1
 
+
     err = add_team_member(session, username, username)
     assert err == ['Cannot add members to an individual Team(test_user)']
+
+    session.delete(team)
+    session.commit()
+
+
+def test_respond_team_invite(session_scope_function):
+    session = session_scope_function
+    team_name, username = 'new_team', 'test_user'
+
+    team = add_team(session, team_name, username, is_individual=False)
+
+    err = add_team_member(session, team_name, "test_user_2", status='asked')
+
+    assert err == []
+    assert len(get_team_members(session, team_name, status='accepted')) == 1
+    assert len(get_team_members(session, team_name, status='asked')) == 1
+
+    msg = "Could not find invites for User\(invalid_user\) to Team\(new_team\)"
+    with pytest.raises(ValueError, match=msg):
+        respond_team_invite(session, "invalid_user", team_name, action='accept')
+
+    respond_team_invite(session, "test_user_2", team_name, action='accept')
+    assert len(get_team_members(session, team_name, status='accepted')) == 2
+    assert len(get_team_members(session, team_name, status='asked')) == 0
 
     session.delete(team)
     session.commit()

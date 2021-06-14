@@ -182,10 +182,11 @@ class Submission(Model):
     # later also ramp_id
     UniqueConstraint(event_team_id, name, name='ts_constraint')
 
-    def __init__(self, name, event_team, session=None):
+    def __init__(self, name, event_team, session=None, user_name=None):
         self.name = name
         self.event_team = event_team
         self.session = inspect(event_team).session
+        self.user_name = user_name
         sha_hasher = hashlib.sha1()
         sha_hasher.update(_encode_string(self.event.name))
         sha_hasher.update(_encode_string(self.team.name))
