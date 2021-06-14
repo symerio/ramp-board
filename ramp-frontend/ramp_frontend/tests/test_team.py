@@ -65,6 +65,45 @@ def makedrop_user(client_session):
     delete_user(session, 'new_user')
 
 
+@pytest.mark.parametrize('url, mode',
+    [
+        ('/events/{event_name}/team', 'GET'),
+        ('/events/{event_name}/team', 'POST'),
+        ('/events/{event_name}/team/leave', 'POST'),
+        ('/events/{event_name}/team/add-user', 'POST'),
+        ('/events/{event_name}/team/invites', 'POST'),
+
+    ]
+)
+def test_team_access(client_session, makedrop_event, makedrop_user, url, mode):
+    client, session = client_session
+    event_name = makedrop_event
+    user_name = makedrop_user
+    if mode == 'GET':
+        func = client.get
+    else:
+        func = client.post
+
+    # Unauthenticated users are redirected to /login
+    rv = func(url.format(event_name=event_name))
+    assert rv.status_code == 302
+    assert '/login' in rv.location
+
+    # Logged in users, for non existing events get redirected to /problems with
+    # a flash message
+    with login_scope(client, user_name, user_name) as client:
+        rv = func(url.format(event_name='non-existing-event'))
+        assert '/problems' in rv.location
+        assert rv.status_code == 302
+
+    # Users not signed up to the request get redirected to /problems with a
+    # flash message
+    with login_scope(client, user_name, user_name) as client:
+        rv = func(url.format(event_name='boston_housing'))
+        assert '/problems' in rv.location
+        assert rv.status_code == 302
+
+
 def test_team_get(client_session, makedrop_event, makedrop_user):
     client, session = client_session
     event_name = makedrop_event
@@ -76,6 +115,7 @@ def test_team_get(client_session, makedrop_event, makedrop_user):
         rv = client.get(f'/events/{event_name}/team')
         assert rv.status_code == 200
         assert b'My teams' in rv.data
+
 
 
 def test_leave_teams(client_session, makedrop_event, makedrop_user):

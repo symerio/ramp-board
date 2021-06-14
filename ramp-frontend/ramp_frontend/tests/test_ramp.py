@@ -21,7 +21,7 @@ from ramp_database.tools.event import get_event
 from ramp_database.tools.user import add_user
 from ramp_database.tools.user import get_user_interactions_by_name
 from ramp_database.tools.submission import get_submission_by_name
-from ramp_databass.tools.team import get_event_team_by_name
+from ramp_database.tools.team import get_event_team_by_name
 from ramp_database.tools.event import add_event
 from ramp_database.tools.event import delete_event
 from ramp_database.tools.team import sign_up_team

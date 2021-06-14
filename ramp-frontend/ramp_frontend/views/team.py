@@ -123,7 +123,6 @@ def add_team_members(event_name):
     event_name : str
         The name of the event.
     """
-    user_name_to_add = request.form['invite_user_name']
 
     current_user = flask_login.current_user
     res = _validate_team_request(db.session, event_name, current_user)
@@ -132,9 +131,11 @@ def add_team_members(event_name):
     event_team = get_event_team_by_user_name(
         db.session, event_name, current_user.name
     )
+    user_name_to_add = request.form['invite_user_name']
 
     user = db.session.query(User).filter_by(name=user_name_to_add).one_or_none()
-
+    if user is None:
+        return {'errors': [f'{user} does not exist.']}
     if event_team is None:
         return {'errors': [f'{user} is not signed up to {event_team.event}.']}
     errors = add_team_member(db.session, event_team.team.name, user.name)
@@ -154,12 +155,12 @@ def manage_team_invites(event_name):
     event_name : str
         The name of the event.
     """
-    team_id = request.form['team_id']
-
     current_user = flask_login.current_user
     res = _validate_team_request(db.session, event_name, current_user)
     if res is not None:
         return res
+
+    team_id = request.form['team_id']
     team_id = int(team_id)
 
     team = db.session.query(Team).filter_by(id=team_id).one_or_none()
