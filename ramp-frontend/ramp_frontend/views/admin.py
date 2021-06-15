@@ -106,10 +106,15 @@ def approve_users():
 
                 subject = ('Signed up for the RAMP event {}'
                            .format(asked_event_team.event.name))
-                body = ('{}, you have been registered to the RAMP event {}. '
-                        'You can now proceed to your sandbox and make '
-                        'submissions.\nHave fun!!!'
-                        .format(user.name, asked_event_team.event.name))
+                body = (f'Dear {user.firstname}, \n\n'
+                        f'you have been registered to the RAMP event {asked_event_team.event.name}.\n'
+                        f'You can now proceed to your sandbox for this event and make '
+                        f'submissions.\n\n'
+                        f'Please note that by signing up to this event, you accept the Challenge Rules '
+                        f'(https://xianti.fr/june-2021-challenge#rules).\n\n'
+                        f'See you on the RAMP website!\n'
+                        f'The Huawei - RAMP team'
+                )
                 send_mail(
                     to=user.email, subject=subject, body=body
                 )
