@@ -134,10 +134,14 @@ def add_team_members(event_name):
     user_name_to_add = request.form['invite_user_name']
 
     user = db.session.query(User).filter_by(name=user_name_to_add).one_or_none()
+    errors = []
     if user is None:
-        return {'errors': [f'{user} does not exist.']}
+        errors.append(f'User({user_name_to_add}) does not exist.')
     if event_team is None:
-        return {'errors': [f'{user} is not signed up to {event_team.event}.']}
+        errors.append(f'User({user}) is not signed up to {event_team.event}.')
+    if errors:
+        flash("\n".join(errors))
+        return redirect(url_for("team.my_teams", event_name=event_name))
     errors = add_team_member(db.session, event_team.team.name, user.name)
     if errors:
         flash("\n".join(errors))
