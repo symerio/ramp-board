@@ -22,7 +22,7 @@ from ramp_database.tools.user import add_user
 from ramp_database.tools.user import approve_user
 from ramp_database.tools.user import get_user_by_name
 from ramp_database.tools.submission import add_submission
-from ramp_database.tools.team import sign_up_team
+from ramp_database.tools.team import sign_up_team, add_team, add_team_member
 
 from ramp_database.tools.frontend import is_user_sign_up_requested
 from ramp_database.tools.frontend import is_admin
@@ -175,6 +175,48 @@ def test_is_accessible_code(session_toy_db):
     )
     event.public_opening_timestamp = past_public_opening
     session_toy_db.commit()
+
+
+def test_is_accessible_code_by_team_members(session_toy_db):
+    # create a third user
+    add_user(
+        session_toy_db, name='test_user_422', password='test',
+        lastname='Test_422', firstname='User_422',
+        email='test.user.422@gmail.com', access_level='user')
+    add_user(
+        session_toy_db, name='test_user_423', password='test',
+        lastname='Test_4', firstname='User_423',
+        email='test.user.423@gmail.com', access_level='user')
+    event_name = 'iris_test'
+    sign_up_team(session_toy_db, event_name, 'test_user_422')
+    sign_up_team(session_toy_db, event_name, 'test_user_423')
+    team_name = "Test 422/423"
+    add_team(session_toy_db, team_name, "test_user_422", is_individual=False)
+    sign_up_team(session_toy_db, event_name, team_name)
+    add_team_member(session_toy_db, team_name, "test_user_423", status='accepted')
+
+    # Make a submission
+    submission_name = 'random_forest_10_10'
+    ramp_config = generate_ramp_config(read_config(ramp_config_template()))
+    path_submission = os.path.join(
+        os.path.dirname(ramp_config['ramp_sandbox_dir']), submission_name
+    )
+    sub = add_submission(
+        session_toy_db, event_name, team_name, submission_name,
+        path_submission
+    )
+    # check that the user submitting the submission could access it
+    user = get_user_by_name(session_toy_db, 'test_user_422')
+    user.is_authenticated = True
+    assert is_accessible_code(
+        session_toy_db, event_name, 'test_user_422', sub.id
+    )
+    # Check that another team member also can access the code
+    user = get_user_by_name(session_toy_db, 'test_user_423')
+    user.is_authenticated = True
+    assert is_accessible_code(
+        session_toy_db, event_name, 'test_user_423', sub.id
+    )
 
 
 def test_is_accessible_leaderboard(session_toy_db):
