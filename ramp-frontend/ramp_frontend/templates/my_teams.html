@@ -87,8 +87,12 @@
 	         <br />
 
 		 <form name="create_new_team" action="/events/{{ event_team.event.name }}/team/leave" method="POST">
-	       <input type='submit' value="Leave team">
-	       </form>
+	          {% if event_team.is_locked %}
+	          <input type='submit' value="Leave team" disabled>
+		  {% else %}
+	          <input type='submit' value="Leave team">
+		  {% endif %}
+	        </form>
 	       {% endif %}
             </div>
           </div>
@@ -114,7 +118,11 @@
 		   <form name="create_new_team_{{ team.id }}" action="/events/{{ event_team.event.name }}/team/invites" method="POST">
 		   <input type="text" name="team_id" value='{{ team.id }}' hidden>
 		   <label>{{ team.name }}</label>
+	           {% if event_team.is_locked %}
+	           <input type='submit' value="Accept" disabled>
+	           {% else %}
 	           <input type='submit' value="Accept">
+		   {% endif %}
 	           </form>
 		 </li>
 		 {% endfor %}
@@ -129,9 +137,17 @@
 	       <form name="create_new_team" method="POST">
 	       <label for="new_team_name">Create new team</label>
 	       <input type="text" id="new_team_name" name="new_team_name" required minlength="2" maxlength="19">
+	       {% if event_team.is_locked %}
+	       <input type='submit' value="Submit" disabled>
+	       {% else %}
 	       <input type='submit' value="Submit">
+	       {% endif %}
 	       </form>
+	       {% if event_team.is_locked %}
+	       <em> Since you have made submissions, you can no longer create teams and leave the current team.</em>
+	       {% else %}
 	       <em> Note that by creating a new team, you will leave your current team.</em>
+	       {% endif %}
 
             </div>
           </div>

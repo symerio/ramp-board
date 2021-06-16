@@ -117,6 +117,8 @@ def test_ask_sign_up_team(session_scope_function):
     assert event_team.signup_timestamp.day == current_datetime.day
     assert event_team.approved is False
 
+    assert event_team.is_locked is False
+
 
 def test_sign_up_team(session_scope_function):
     event_name, username = 'iris_test', 'test_user'
@@ -207,7 +209,7 @@ def test_respond_team_invite(session_scope_function):
     assert len(get_team_members(session, team_name, status='accepted')) == 1
     assert len(get_team_members(session, team_name, status='asked')) == 1
 
-    msg = "Could not find invites for User\(invalid_user\) to Team\(new_team\)"
+    msg = r"Could not find invites for User\(invalid_user\) to Team\(new_team\)"
     with pytest.raises(ValueError, match=msg):
         respond_team_invite(session, "invalid_user", team_name, action='accept')
 

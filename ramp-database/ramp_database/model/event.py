@@ -527,3 +527,8 @@ class EventTeam(Model):
 
     def __repr__(self):
         return '{}/{}'.format(self.event, self.team)
+
+    @property
+    def is_locked(self):
+        """Check if event team is locked"""
+        return len(self.submissions) > 1
