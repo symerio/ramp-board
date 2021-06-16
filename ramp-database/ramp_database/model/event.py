@@ -202,8 +202,11 @@ class Event(Model):
         each team."""
         self.n_submissions = 0
         for event_team in self.event_teams:
-            # substract one for starting kit
-            self.n_submissions += len(event_team.submissions) - 1
+            if event_team.team.is_individual:
+                # substract one for starting kit
+                self.n_submissions += len(event_team.submissions) - 1
+            else:
+                self.n_submissions += len(event_team.submissions)
 
     @property
     def Predictions(self):
