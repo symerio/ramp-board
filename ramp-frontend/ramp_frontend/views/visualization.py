@@ -125,6 +125,11 @@ def score_plot(session, event):
     is_open = (score_plot_df['submitted at (UTC)'] >
                event.public_opening_timestamp).values
 
+    if not len(score_plot_df['contributivity'].values):
+        tools = ['pan,wheel_zoom,box_zoom,reset,save,tap']
+        p = figure(plot_width=900, plot_height=600, tools=tools, title='Scores')
+        return p
+
     max_contributivity = max(
         0.0000001, max(score_plot_df['contributivity'].values))
     max_historical_contributivity = max(0.0000001, max(
