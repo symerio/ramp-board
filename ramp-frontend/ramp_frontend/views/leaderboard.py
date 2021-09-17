@@ -136,7 +136,7 @@ def leaderboard(event_name):
             failed_leaderboard=failed_leaderboard_html,
             new_leaderboard=new_leaderboard_html,
             admin=True,
-            **leaderboard_kwargs
+            **leaderboard_kwargs,
         )
     else:
         template = render_template("leaderboard.html", **leaderboard_kwargs)

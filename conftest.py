@@ -1,10 +1,6 @@
-import contextlib
-import os
 import pytest
-import smtpd
 import warnings
 from sqlalchemy import create_engine, exc
-from threading import Thread
 from ramp_utils.testing import database_config_template
 from yaml import safe_load
 
