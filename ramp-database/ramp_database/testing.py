@@ -124,7 +124,11 @@ def _delete_line_from_file(f_name, line_to_delete):
 
 
 def setup_ramp_kit_ramp_data(
-    ramp_config, problem_name, force=False, depth=None, mock_html_conversion=False
+    ramp_config,
+    problem_name,
+    force=False,
+    depth=None,
+    mock_html_conversion=False,
 ):
     """Clone ramp-kit and ramp-data repository and setup it up.
 
@@ -184,7 +188,8 @@ def setup_ramp_kit_ramp_data(
         # delete this line since it trigger in the front-end
         # (try to open execute "custom.css".)
         _delete_line_from_file(
-            filename_notebook_html, '<link rel="stylesheet" href="custom.css">\n'
+            filename_notebook_html,
+            '<link rel="stylesheet" href="custom.css">\n',
         )
     else:
         # create an almost empty html file
@@ -284,7 +289,10 @@ def add_problems(session):
     for problem_name, ramp_config in ramp_configs.items():
         internal_ramp_config = generate_ramp_config(ramp_config)
         setup_ramp_kit_ramp_data(
-            internal_ramp_config, problem_name, depth=1, mock_html_conversion=True
+            internal_ramp_config,
+            problem_name,
+            depth=1,
+            mock_html_conversion=True,
         )
         add_problem(
             session,
@@ -303,7 +311,9 @@ def add_problems(session):
             category="classification",
         )
         add_problem_keyword(
-            session, problem_name=problem_name, keyword_name=problem_name + "_theme"
+            session,
+            problem_name=problem_name,
+            keyword_name=problem_name + "_theme",
         )
 
 
@@ -386,10 +396,16 @@ def submit_all_starting_kits(session):
             ramp_config_problem["ramp_kit_dir"], "submissions"
         )
         submit_starting_kits(
-            session, ramp_config_problem["event_name"], "test_user", path_submissions
+            session,
+            ramp_config_problem["event_name"],
+            "test_user",
+            path_submissions,
         )
         submit_starting_kits(
-            session, ramp_config_problem["event_name"], "test_user_2", path_submissions
+            session,
+            ramp_config_problem["event_name"],
+            "test_user_2",
+            path_submissions,
         )
 
 

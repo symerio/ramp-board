@@ -97,7 +97,12 @@ def test_check_login_required(client_session, page):
 
 @pytest.mark.parametrize(
     "page",
-    ["/events/xxx", "/events/xxx/sign_up", "/events/xxx/sandbox", "/event_plots/xxx"],
+    [
+        "/events/xxx",
+        "/events/xxx/sign_up",
+        "/events/xxx/sandbox",
+        "/event_plots/xxx",
+    ],
 )
 def test_check_unknown_events(client_session, page):
     client, _ = client_session
@@ -270,7 +275,12 @@ testtimestamps = [
     "opening_date,public_date,closing_date,expected", testtimestamps
 )
 def test_event_status(
-    client_session, makedrop_event, opening_date, public_date, closing_date, expected
+    client_session,
+    makedrop_event,
+    opening_date,
+    public_date,
+    closing_date,
+    expected,
 ):
     # checks if the event status is displayed correctly
     client, session = client_session
@@ -385,7 +395,15 @@ def test_sign_up_for_event_mail(client_session):
     # GET: sign-up to a new controlled event
     with client.application.app_context():
         with mail.record_messages() as outbox:
-            add_user(session, "zz", "zz", "zz", "zz", "zz@gmail", access_level="user")
+            add_user(
+                session,
+                "zz",
+                "zz",
+                "zz",
+                "zz",
+                "zz@gmail",
+                access_level="user",
+            )
             with login_scope(client, "zz", "zz") as client:
                 rv = client.get("/events/iris_test/sign_up")
                 assert rv.status_code == 302
@@ -462,7 +480,12 @@ def test_ask_for_event_mail(client_session):
     "opening_date, public_date, closing_date, expected", testtimestamps
 )
 def test_submit_button_enabled_disabled(
-    client_session, makedrop_event, opening_date, public_date, closing_date, expected
+    client_session,
+    makedrop_event,
+    opening_date,
+    public_date,
+    closing_date,
+    expected,
 ):
     client, session = client_session
 
@@ -677,7 +700,12 @@ def test_sandbox_save_file(client_session, makedrop_event):
     "opening_date, public_date, closing_date, expected", testtimestamps
 )
 def test_correct_message_sandbox(
-    client_session, makedrop_event, opening_date, public_date, closing_date, expected
+    client_session,
+    makedrop_event,
+    opening_date,
+    public_date,
+    closing_date,
+    expected,
 ):
     client, session = client_session
 

@@ -166,7 +166,10 @@ class Dispatcher:
             not self._processing_worker_queue.full()
             and not self._awaiting_worker_queue.empty()
         ):
-            worker, (submission_id, submission_name) = self._awaiting_worker_queue.get()
+            worker, (
+                submission_id,
+                submission_name,
+            ) = self._awaiting_worker_queue.get()
             self._logger.info(f"Starting worker: {worker}")
 
             try:

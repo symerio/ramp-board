@@ -39,7 +39,10 @@ pytestmark = pytest.mark.skipif(
 
 @contextmanager
 def get_conda_worker(
-    submission_name, Worker=CondaEnvWorker, conda_env="ramp-iris", dask_scheduler=None
+    submission_name,
+    Worker=CondaEnvWorker,
+    conda_env="ramp-iris",
+    dask_scheduler=None,
 ):
 
     module_path = os.path.dirname(__file__)
@@ -70,7 +73,10 @@ def _remove_directory(worker):
     if "kit_dir" not in worker.config:
         return
     output_training_dir = os.path.join(
-        worker.config["kit_dir"], "submissions", worker.submission, "training_output"
+        worker.config["kit_dir"],
+        "submissions",
+        worker.submission,
+        "training_output",
     )
     for directory in (
         output_training_dir,

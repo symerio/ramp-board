@@ -415,7 +415,11 @@ def get_leaderboard(
 
     if leaderboard_type in ["public", "private"]:
         df = _compute_leaderboard(
-            session, submissions, leaderboard_type, event_name, with_links=with_links
+            session,
+            submissions,
+            leaderboard_type,
+            event_name,
+            with_links=with_links,
         )
     elif leaderboard_type in ["new", "failed"]:
         if leaderboard_type == "new":

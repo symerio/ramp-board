@@ -70,7 +70,10 @@ def my_teams(event_name):
                 db.session, team_name, current_user.name, is_individual=False
             )
             sign_up_team(
-                db.session, event_name, team_name=team.name, user_name=current_user.name
+                db.session,
+                event_name,
+                team_name=team.name,
+                user_name=current_user.name,
             )
 
     event_team = get_event_team_by_user_name(db.session, event_name, current_user.name)
@@ -166,6 +169,10 @@ def manage_team_invites(event_name):
 
     team = db.session.query(Team).filter_by(id=team_id).one_or_none()
     respond_team_invite(
-        db.session, current_user.name, team.name, action="accept", event_name=event_name
+        db.session,
+        current_user.name,
+        team.name,
+        action="accept",
+        event_name=event_name,
     )
     return redirect(url_for("team.my_teams", event_name=event_name))

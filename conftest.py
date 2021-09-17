@@ -17,7 +17,8 @@ def database_connection():
     dbowner = config.get("db_owner")
 
     engine = create_engine(
-        f"postgresql://{dbowner}:@localhost/postgres", isolation_level="AUTOCOMMIT"
+        f"postgresql://{dbowner}:@localhost/postgres",
+        isolation_level="AUTOCOMMIT",
     )
 
     connection = engine.connect()

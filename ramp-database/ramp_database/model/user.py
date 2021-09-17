@@ -132,7 +132,14 @@ class User(Model):
     bio = Column(String(1024), default=None)
     is_want_news = Column(Boolean, default=True)
     access_level = Column(
-        Enum("admin", "user", "asked", "not_confirmed", "deleted", name="access_level"),
+        Enum(
+            "admin",
+            "user",
+            "asked",
+            "not_confirmed",
+            "deleted",
+            name="access_level",
+        ),
         default="asked",
     )
     signup_timestamp = Column(DateTime, nullable=False)
@@ -208,7 +215,11 @@ class User(Model):
         return (
             "User(name={}, lastname={}, firstname={}, email={}, "
             "admined_teams={})".format(
-                self.name, self.lastname, self.firstname, self.email, self.admined_teams
+                self.name,
+                self.lastname,
+                self.firstname,
+                self.email,
+                self.admined_teams,
             )
         )
 
@@ -321,22 +332,26 @@ default is None
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship(
-        "User", backref=backref("user_interactions", cascade="all, delete-orphan")
+        "User",
+        backref=backref("user_interactions", cascade="all, delete-orphan"),
     )
 
     problem_id = Column(Integer, ForeignKey("problems.id"))
     problem = relationship(
-        "Problem", backref=backref("user_interactions", cascade="all, delete-orphan")
+        "Problem",
+        backref=backref("user_interactions", cascade="all, delete-orphan"),
     )
 
     event_team_id = Column(Integer, ForeignKey("event_teams.id"))
     event_team = relationship(
-        "EventTeam", backref=backref("user_interactions", cascade="all, delete-orphan")
+        "EventTeam",
+        backref=backref("user_interactions", cascade="all, delete-orphan"),
     )
 
     submission_id = Column(Integer, ForeignKey("submissions.id"))
     submission = relationship(
-        "Submission", backref=backref("user_interactions", cascade="all, delete-orphan")
+        "Submission",
+        backref=backref("user_interactions", cascade="all, delete-orphan"),
     )
 
     submission_file_id = Column(Integer, ForeignKey("submission_files.id"))

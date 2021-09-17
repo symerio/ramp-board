@@ -153,7 +153,11 @@ def test_is_accessible_code(session_toy_db):
         os.path.dirname(ramp_config["ramp_sandbox_dir"]), submission_name
     )
     sub = add_submission(
-        session_toy_db, event_name, "test_user_3", submission_name, path_submission
+        session_toy_db,
+        event_name,
+        "test_user_3",
+        submission_name,
+        path_submission,
     )
     # check that the user submitting the submission could access it
     assert is_accessible_code(session_toy_db, event_name, "test_user_3", sub.id)

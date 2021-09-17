@@ -45,7 +45,10 @@ class WorkflowElementType(Model):
     def __repr__(self):
         return (
             "WorkflowElementType(name={}, type={} is_editable={}, max_size={})".format(
-                self.name, self.type.name, self.type.is_editable, self.type.max_size
+                self.name,
+                self.type.name,
+                self.type.is_editable,
+                self.type.max_size,
             )
         )
 

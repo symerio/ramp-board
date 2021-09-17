@@ -48,7 +48,11 @@ def generate_flask_config(config):
     user_flask_config = {key.upper(): value for key, value in config["flask"].items()}
     flask_config.update(user_flask_config)
 
-    for key in ["LOGIN_INSTRUCTIONS", "SIGN_UP_INSTRUCTIONS", "PRIVACY_POLICY_PAGE"]:
+    for key in [
+        "LOGIN_INSTRUCTIONS",
+        "SIGN_UP_INSTRUCTIONS",
+        "PRIVACY_POLICY_PAGE",
+    ]:
         flask_config[key] = _read_if_html_path(flask_config[key])
 
     database_config = config["sqlalchemy"]

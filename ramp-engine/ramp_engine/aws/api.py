@@ -922,7 +922,9 @@ def _get_boto_session(config):
     else:
         raise ValueError(
             'Please specify either "{}" or both of "{}" and "{}"'.format(
-                PROFILE_NAME_FIELD, ACCESS_KEY_ID_FIELD, SECRET_ACCESS_KEY_FIELD
+                PROFILE_NAME_FIELD,
+                ACCESS_KEY_ID_FIELD,
+                SECRET_ACCESS_KEY_FIELD,
             )
         )
 
@@ -965,7 +967,9 @@ def validate_config(config):
     ):
         raise ValueError(
             'Please specify either "{}" or both of "{}" and "{}"'.format(
-                PROFILE_NAME_FIELD, ACCESS_KEY_ID_FIELD, SECRET_ACCESS_KEY_FIELD
+                PROFILE_NAME_FIELD,
+                ACCESS_KEY_ID_FIELD,
+                SECRET_ACCESS_KEY_FIELD,
             )
         )
     if PROFILE_NAME_FIELD not in conf and not (

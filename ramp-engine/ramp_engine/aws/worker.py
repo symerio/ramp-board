@@ -87,7 +87,10 @@ class AWSWorker(BaseWorker):
         for _ in range(5):
             # try uploading the submission a few times, as this regularly fails
             exit_status = aws.upload_submission(
-                self.config, self.instance.id, self.submission, self.submissions_path
+                self.config,
+                self.instance.id,
+                self.submission,
+                self.submissions_path,
             )
             if exit_status == 0:
                 break

@@ -316,7 +316,8 @@ def test_approve_user(session_scope_function):
 
 
 @pytest.mark.parametrize(
-    "output_format, expected_format", [("dataframe", pd.DataFrame), ("html", str)]
+    "output_format, expected_format",
+    [("dataframe", pd.DataFrame), ("html", str)],
 )
 def test_check_user_interactions(
     session_scope_function, output_format, expected_format

@@ -58,12 +58,24 @@ def test_setup_init_event(deployment_dir):
         runner = CliRunner()
         result = runner.invoke(
             main,
-            ["init-event", "--name", "iris_test", "--deployment-dir", deployment_dir],
+            [
+                "init-event",
+                "--name",
+                "iris_test",
+                "--deployment-dir",
+                deployment_dir,
+            ],
         )
         assert result.exit_code == 0, result.output
         result = runner.invoke(
             main,
-            ["init-event", "--name", "iris_test", "--deployment-dir", deployment_dir],
+            [
+                "init-event",
+                "--name",
+                "iris_test",
+                "--deployment-dir",
+                deployment_dir,
+            ],
         )
         assert result.exit_code == 0, result.output
         result = runner.invoke(

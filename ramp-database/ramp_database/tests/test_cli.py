@@ -84,7 +84,13 @@ def test_delete_user(make_toy_db):
     )
     result = runner.invoke(
         main,
-        ["delete-user", "--config", database_config_template(), "--login", "yyy"],
+        [
+            "delete-user",
+            "--config",
+            database_config_template(),
+            "--login",
+            "yyy",
+        ],
         catch_exceptions=False,
     )
     assert result.exit_code == 0, result.output
@@ -223,10 +229,19 @@ def test_delete_event_only_files(make_toy_db):
     )
     runner.invoke(
         main_utils,
-        ["init-event", "--name", "iris_test2", "--deployment-dir", deployment_dir],
+        [
+            "init-event",
+            "--name",
+            "iris_test2",
+            "--deployment-dir",
+            deployment_dir,
+        ],
     )
     event_config = os.path.join(
-        deployment_dir, "events", ramp_config["ramp"]["event_name"], "config.yml"
+        deployment_dir,
+        "events",
+        ramp_config["ramp"]["event_name"],
+        "config.yml",
     )
     with open(event_config, "w+") as f:
         yaml.dump(ramp_config, f)
@@ -272,10 +287,19 @@ def test_delete_event(make_toy_db, from_disk):
     )
     runner.invoke(
         main_utils,
-        ["init-event", "--name", "iris_test2", "--deployment-dir", deployment_dir],
+        [
+            "init-event",
+            "--name",
+            "iris_test2",
+            "--deployment-dir",
+            deployment_dir,
+        ],
     )
     event_config = os.path.join(
-        deployment_dir, "events", ramp_config["ramp"]["event_name"], "config.yml"
+        deployment_dir,
+        "events",
+        ramp_config["ramp"]["event_name"],
+        "config.yml",
     )
     with open(event_config, "w+") as f:
         yaml.dump(ramp_config, f)
@@ -322,14 +346,23 @@ def test_delete_predictions(make_toy_db, database_connection, force, add_to_db):
         [ramp_config["ramp"]["kit_dir"], ramp_config["ramp"]["data_dir"]]
     )
     event_config = os.path.join(
-        deployment_dir, "events", ramp_config["ramp"]["event_name"], "config.yml"
+        deployment_dir,
+        "events",
+        ramp_config["ramp"]["event_name"],
+        "config.yml",
     )
 
     if add_to_db:
         # deploy a new event named `iris_test2`
         runner.invoke(
             main_utils,
-            ["init-event", "--name", "iris_test2", "--deployment-dir", deployment_dir],
+            [
+                "init-event",
+                "--name",
+                "iris_test2",
+                "--deployment-dir",
+                deployment_dir,
+            ],
         )
 
         with open(event_config, "w+") as f:
@@ -564,7 +597,10 @@ def test_compute_contributivity(make_toy_db):
         [ramp_config["ramp"]["kit_dir"], ramp_config["ramp"]["data_dir"]]
     )
     event_config = os.path.join(
-        deployment_dir, "events", ramp_config["ramp"]["event_name"], "config.yml"
+        deployment_dir,
+        "events",
+        ramp_config["ramp"]["event_name"],
+        "config.yml",
     )
 
     # Create the event config on disk
@@ -579,7 +615,10 @@ def test_compute_contributivity(make_toy_db):
         ],
     )
     event_config = os.path.join(
-        deployment_dir, "events", ramp_config["ramp"]["event_name"], "config.yml"
+        deployment_dir,
+        "events",
+        ramp_config["ramp"]["event_name"],
+        "config.yml",
     )
     with open(event_config, "w+") as f:
         yaml.dump(ramp_config, f)

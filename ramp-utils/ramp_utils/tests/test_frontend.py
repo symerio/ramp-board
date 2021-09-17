@@ -8,7 +8,8 @@ from ramp_utils.frontend import _read_if_html_path
 
 
 @pytest.mark.parametrize(
-    "config", [database_config_template(), read_config(database_config_template())]
+    "config",
+    [database_config_template(), read_config(database_config_template())],
 )
 def test_generate_flask_config(config):
     flask_config = generate_flask_config(config)

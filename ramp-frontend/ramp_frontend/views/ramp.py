@@ -103,7 +103,9 @@ def problems():
                 event.state = "collab"
             if user:
                 signed = get_event_team_by_name(
-                    db.session, event.name, team_name=flask_login.current_user.name
+                    db.session,
+                    event.name,
+                    team_name=flask_login.current_user.name,
                 )
                 if not signed:
                     event.state_user = "not_signed"
@@ -233,7 +235,11 @@ def user_event(event_name):
             db.session, event_name, flask_login.current_user.name
         )
         return render_template(
-            "event.html", event=event, admin=admin, approved=approved, asked=asked
+            "event.html",
+            event=event,
+            admin=admin,
+            approved=approved,
+            asked=asked,
         )
     return redirect_to_user(
         "Event {} does not exist.".format(event_name), is_error=True
@@ -274,7 +280,9 @@ def sign_up_for_event(event_name):
             )
             body = body_formatter_user(flask_login.current_user)
             url_approve = "http://{}/events/{}/sign_up/{}".format(
-                app.config["DOMAIN_NAME"], event.name, flask_login.current_user.name
+                app.config["DOMAIN_NAME"],
+                event.name,
+                flask_login.current_user.name,
             )
             body += "Click on this link to approve the sign-up request: {}".format(
                 url_approve
@@ -325,7 +333,10 @@ def sandbox(event_name):
     # setup the webpage when loading
     # we use the code store in the sandbox to show to the user
     sandbox_submission = get_submission_by_name(
-        db.session, event_name, flask_login.current_user.name, event.ramp_sandbox_name
+        db.session,
+        event_name,
+        flask_login.current_user.name,
+        event.ramp_sandbox_name,
     )
     event_team = get_event_team_by_user_name(
         db.session, event_name, flask_login.current_user.name
@@ -452,7 +463,8 @@ def sandbox(event_name):
 
             # TODO: create a get_function
             submission_file = SubmissionFile.query.filter_by(
-                submission=sandbox_submission, workflow_element=upload_workflow_element
+                submission=sandbox_submission,
+                workflow_element=upload_workflow_element,
             ).one()
             if submission_file.is_editable:
                 old_code = submission_file.get_code()
@@ -558,7 +570,9 @@ def sandbox(event_name):
 
             logger.info(
                 "{} submitted {} for {}.".format(
-                    flask_login.current_user.name, new_submission.name, event_team
+                    flask_login.current_user.name,
+                    new_submission.name,
+                    event_team,
                 )
             )
             if event.is_send_submitted_mails:
@@ -744,7 +758,8 @@ def credit(submission_hash):
                 sum_credit += int(getattr(credit_form, s_field).data)
             if sum_credit != 100:
                 return redirect_to_credit(
-                    submission_hash, "Error: The total credit should add up to 100"
+                    submission_hash,
+                    "Error: The total credit should add up to 100",
                 )
         except Exception as e:
             return redirect_to_credit(submission_hash, "Error: {}".format(e))
@@ -839,7 +854,10 @@ def view_model(submission_hash, f_name):
     """
     submission = Submission.query.filter_by(hash_=submission_hash).one_or_none()
     if submission is None or not is_accessible_code(
-        db.session, submission.event.name, flask_login.current_user.name, submission.id
+        db.session,
+        submission.event.name,
+        flask_login.current_user.name,
+        submission.id,
     ):
         error_str = "Missing submission: {}".format(submission_hash)
         return redirect_to_user(error_str)
@@ -933,7 +951,11 @@ def view_model(submission_hash, f_name):
         for filename in import_form.selected_f_names.data:
             logger.info(
                 "{} is importing {}/{}/{}/{}".format(
-                    flask_login.current_user.name, event, team, submission, filename
+                    flask_login.current_user.name,
+                    event,
+                    team,
+                    submission,
+                    filename,
                 )
             )
 

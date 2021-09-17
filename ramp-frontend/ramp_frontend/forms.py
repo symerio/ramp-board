@@ -83,7 +83,11 @@ class UserUpdateProfileForm(FlaskForm):
 
     user_name = StringField(
         "user_name",
-        [validators.DataRequired(), validators.Length(min=1, max=20), _space_check],
+        [
+            validators.DataRequired(),
+            validators.Length(min=1, max=20),
+            _space_check,
+        ],
     )
     firstname = StringField("firstname", [validators.DataRequired()])
     lastname = StringField("lastname", [validators.DataRequired()])
@@ -97,7 +101,10 @@ class UserUpdateProfileForm(FlaskForm):
     bio = StringField("bio")
     graduation_year = IntegerField(
         "firstname",
-        [validators.DataRequired(), validators.NumberRange(min=2010, max=2040)],
+        [
+            validators.DataRequired(),
+            validators.NumberRange(min=2010, max=2040),
+        ],
     )
     university = QuerySelectField(
         query_factory=lambda: University.query.all(),
@@ -316,7 +323,8 @@ class AskForEventForm(FlaskForm):
         "event_title", [validators.DataRequired(), validators.Length(max=80)]
     )
     n_students = IntegerField(
-        "n_students", [validators.DataRequired(), validators.NumberRange(min=0)]
+        "n_students",
+        [validators.DataRequired(), validators.NumberRange(min=0)],
     )
     min_duration_between_submissions_hour = IntegerField(
         "min_h", [validators.NumberRange(min=0)]

@@ -176,7 +176,11 @@ def test_add_submission_too_early_submission(base_db):
             err_msg = "You need to wait"
             with pytest.raises(TooEarlySubmissionError, match=err_msg):
                 add_submission(
-                    session, event_name, username, submission_name, path_submission
+                    session,
+                    event_name,
+                    username,
+                    submission_name,
+                    path_submission,
                 )
         else:
             add_submission(
@@ -392,9 +396,30 @@ def test_check_scores(session_scope_module):
     )
     expected_df = pd.DataFrame(
         {
-            "acc": [0.604167, 0.583333, 0.733333, 0.604167, 0.583333, 0.733333],
-            "error": [0.395833, 0.416667, 0.266667, 0.395833, 0.416667, 0.266667],
-            "nll": [0.732763, 2.194549, 0.693464, 0.746132, 2.030762, 0.693992],
+            "acc": [
+                0.604167,
+                0.583333,
+                0.733333,
+                0.604167,
+                0.583333,
+                0.733333,
+            ],
+            "error": [
+                0.395833,
+                0.416667,
+                0.266667,
+                0.395833,
+                0.416667,
+                0.266667,
+            ],
+            "nll": [
+                0.732763,
+                2.194549,
+                0.693464,
+                0.746132,
+                2.030762,
+                0.693992,
+            ],
             "f1_70": [0.333333, 0.33333, 0.666667, 0.33333, 0.33333, 0.666667],
         },
         index=multi_index,
@@ -417,8 +442,18 @@ def test_check_bagged_scores(session_scope_module):
         {
             "acc": [0.70833333333, 0.70833333333, 0.65, 0.6486486486486],
             "error": [0.29166666667, 0.29166666667, 0.35, 0.35135135135],
-            "nll": [0.80029268745, 0.66183018275, 0.52166532641, 0.58510855181],
-            "f1_70": [0.66666666667, 0.33333333333, 0.33333333333, 0.33333333333],
+            "nll": [
+                0.80029268745,
+                0.66183018275,
+                0.52166532641,
+                0.58510855181,
+            ],
+            "f1_70": [
+                0.66666666667,
+                0.33333333333,
+                0.33333333333,
+                0.33333333333,
+            ],
         },
         index=multi_index,
     )

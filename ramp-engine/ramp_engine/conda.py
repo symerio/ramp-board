@@ -43,7 +43,11 @@ def _get_conda_env_path(conda_info: Dict, env_name: str, worker=None) -> str:
 
 
 def _conda_ramp_test_submission(
-    config: Dict, submission: str, cmd_ramp: str, log_dir: str, wait: bool = False
+    config: Dict,
+    submission: str,
+    cmd_ramp: str,
+    log_dir: str,
+    wait: bool = False,
 ):
     import os
     import subprocess

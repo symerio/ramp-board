@@ -89,7 +89,12 @@ def test_event_model_property(session_scope_module):
     ],
 )
 def test_even_model_timestamp(
-    session_scope_module, opening, public_opening, closure, properties, expected_values
+    session_scope_module,
+    opening,
+    public_opening,
+    closure,
+    properties,
+    expected_values,
 ):
     # check the property linked to the opening/closure of the event.
     event = get_event(session_scope_module, "iris_test")

@@ -804,7 +804,11 @@ def submit_starting_kits(session, event_name, team_name, path_submission):
             else submission_name + "_test"
         )
         submission = add_submission(
-            session, event_name, team_name, submission_name, from_submission_path
+            session,
+            event_name,
+            team_name,
+            submission_name,
+            from_submission_path,
         )
         logger.info("Copying the submission files into the deployment folder")
         logger.info("Adding {}".format(submission))

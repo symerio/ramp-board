@@ -170,7 +170,10 @@ class DaskWorker(BaseWorker):
         if self.status != "collected":
             raise ValueError("Collect the results before to kill the worker.")
         output_training_dir = os.path.join(
-            self.config["kit_dir"], "submissions", self.submission, "training_output"
+            self.config["kit_dir"],
+            "submissions",
+            self.submission,
+            "training_output",
         )
         self._client.submit(
             shutil.rmtree, output_training_dir, ignore_errors=True, pure=False
@@ -283,14 +286,19 @@ class DaskWorker(BaseWorker):
                 returncode = 124
             pred_dir = os.path.join(self.config["predictions_dir"], self.submission)
             output_training_dir = os.path.join(
-                self.config["submissions_dir"], self.submission, "training_output"
+                self.config["submissions_dir"],
+                self.submission,
+                "training_output",
             )
             self._client.submit(
                 shutil.rmtree, pred_dir, ignore_errors=True, pure=False
             ).result()
             if returncode:
                 self._client.submit(
-                    shutil.rmtree, output_training_dir, ignore_errors=True, pure=False
+                    shutil.rmtree,
+                    output_training_dir,
+                    ignore_errors=True,
+                    pure=False,
                 ).result()
                 self.status = "collected"
                 return (returncode, error_msg)

@@ -128,7 +128,10 @@ def test_login(client_session):
     assert rv.location == landing_page["next"]
     logout(client)
     rv = client.post(
-        "/login", data=login_info, query_string=landing_page, follow_redirects=True
+        "/login",
+        data=login_info,
+        query_string=landing_page,
+        follow_redirects=True,
     )
     assert rv.status_code == 200
     logout(client)
@@ -382,7 +385,11 @@ def test_update_profile(client_session):
             assert attr in rv.data
 
         # POST function once logged-in
-        user_profile = {"lastname": "XXX", "firstname": "YYY", "email": "xxx@gmail.com"}
+        user_profile = {
+            "lastname": "XXX",
+            "firstname": "YYY",
+            "email": "xxx@gmail.com",
+        }
         rv = client.post("/update_profile", data=user_profile)
         assert rv.status_code == 302
         assert rv.location == "http://localhost/problems"

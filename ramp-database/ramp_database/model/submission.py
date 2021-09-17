@@ -142,7 +142,8 @@ class Submission(Model):
 
     event_team_id = Column(Integer, ForeignKey("event_teams.id"), nullable=False)
     event_team = relationship(
-        "EventTeam", backref=backref("submissions", cascade="all, delete-orphan")
+        "EventTeam",
+        backref=backref("submissions", cascade="all, delete-orphan"),
     )
 
     name = Column(String(20), nullable=False)
@@ -643,7 +644,9 @@ class SubmissionFile(Model):
     )
 
     submission_file_type_extension_id = Column(
-        Integer, ForeignKey("submission_file_type_extensions.id"), nullable=False
+        Integer,
+        ForeignKey("submission_file_type_extensions.id"),
+        nullable=False,
     )
     submission_file_type_extension = relationship(
         "SubmissionFileTypeExtension", backref=backref("submission_files")
@@ -837,14 +840,16 @@ class SubmissionScoreOnCVFold(Model):
         Integer, ForeignKey("submission_on_cv_folds.id"), nullable=False
     )
     submission_on_cv_fold = relationship(
-        "SubmissionOnCVFold", backref=backref("scores", cascade="all, delete-orphan")
+        "SubmissionOnCVFold",
+        backref=backref("scores", cascade="all, delete-orphan"),
     )
 
     submission_score_id = Column(
         Integer, ForeignKey("submission_scores.id"), nullable=False
     )
     submission_score = relationship(
-        "SubmissionScore", backref=backref("on_cv_folds", cascade="all, delete-orphan")
+        "SubmissionScore",
+        backref=backref("on_cv_folds", cascade="all, delete-orphan"),
     )
 
     train_score = Column(Float)
@@ -929,7 +934,8 @@ class SubmissionOnCVFold(Model):
 
     submission_id = Column(Integer, ForeignKey("submissions.id"), nullable=False)
     submission = relationship(
-        "Submission", backref=backref("on_cv_folds", cascade="all, delete-orphan")
+        "Submission",
+        backref=backref("on_cv_folds", cascade="all, delete-orphan"),
     )
 
     cv_fold_id = Column(Integer, ForeignKey("cv_folds.id"), nullable=False)
@@ -1150,7 +1156,8 @@ class SubmissionSimilarity(Model):
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship(
-        "User", backref=backref("submission_similaritys", cascade="all, delete-orphan")
+        "User",
+        backref=backref("submission_similaritys", cascade="all, delete-orphan"),
     )
 
     source_submission_id = Column(Integer, ForeignKey("submissions.id"))
@@ -1169,7 +1176,10 @@ class SubmissionSimilarity(Model):
 
     def __repr__(self):
         text = "type={}, user={}, source={}, target={} ".format(
-            self.type, self.user, self.source_submission, self.target_submission
+            self.type,
+            self.user,
+            self.source_submission,
+            self.target_submission,
         )
         text += "similarity={}, timestamp={}".format(self.similarity, self.timestamp)
         return text

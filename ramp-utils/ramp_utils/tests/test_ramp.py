@@ -58,7 +58,11 @@ def test_generate_ramp_config(event_config, database_config):
         ),
         "ramp_submissions_dir": os.path.join("/tmp/databoard_test", "submissions"),
         "ramp_sandbox_dir": os.path.join(
-            "/tmp/databoard_test", "ramp-kits", "iris", "submissions", "starting_kit"
+            "/tmp/databoard_test",
+            "ramp-kits",
+            "iris",
+            "submissions",
+            "starting_kit",
         ),
         "ramp_logs_dir": os.path.join("/tmp/databoard_test", "log"),
         "ramp_predictions_dir": os.path.join("/tmp/databoard_test", "preds"),

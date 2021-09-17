@@ -153,7 +153,8 @@ def score_plot(session, event):
     fill_color_1 = (176, 23, 31)
     fill_color_2 = (16, 78, 139)
     fill_colors_1 = color_gradient(
-        fill_color_1, score_plot_df["contributivity"].values / max_contributivity
+        fill_color_1,
+        score_plot_df["contributivity"].values / max_contributivity,
     )
     fill_colors_2 = color_gradient(
         fill_color_2,

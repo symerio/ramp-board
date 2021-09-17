@@ -146,7 +146,9 @@ def add_workflow(session, workflow_object):
             logger.info("Adding {}".format(workflow_element_type))
             session.add(workflow_element_type)
         workflow_element = select_workflow_element_by_workflow_and_type(
-            session, workflow=workflow, workflow_element_type=workflow_element_type
+            session,
+            workflow=workflow,
+            workflow_element_type=workflow_element_type,
         )
         if workflow_element is None:
             workflow_element = WorkflowElement(
@@ -351,7 +353,10 @@ def add_keyword(
         keyword.description = description
     else:
         keyword = Keyword(
-            name=name, type=keyword_type, category=category, description=description
+            name=name,
+            type=keyword_type,
+            category=category,
+            description=description,
         )
         session.add(keyword)
     session.commit()

@@ -31,9 +31,17 @@ def make_toy_db(database_connection):
 def test_test_launch(make_toy_db):
     # pass environment to subprocess
     cmd = ["python", "-m"]
-    cmd += ["ramp_frontend.cli", "test-launch", "--config", database_config_template()]
+    cmd += [
+        "ramp_frontend.cli",
+        "test-launch",
+        "--config",
+        database_config_template(),
+    ]
     proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ.copy()
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ.copy(),
     )
     # wait for 5 seconds before to terminate the server
     time.sleep(5)

@@ -337,7 +337,8 @@ def user_confirm_email(token):
     user = User.query.filter_by(email=email).one_or_none()
     if user is None:
         flash(
-            "You did not sign-up yet to RAMP. Please sign-up first.", category="error"
+            "You did not sign-up yet to RAMP. Please sign-up first.",
+            category="error",
         )
         return redirect(url_for("auth.sign_up"))
     elif user.access_level in ("user", "admin"):

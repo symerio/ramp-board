@@ -216,7 +216,10 @@ def test_check_event(session_scope_function):
     for problem_name, ramp_config in ramp_configs.items():
         internal_ramp_config = generate_ramp_config(ramp_config)
         setup_ramp_kit_ramp_data(
-            internal_ramp_config, problem_name, depth=1, mock_html_conversion=True
+            internal_ramp_config,
+            problem_name,
+            depth=1,
+            mock_html_conversion=True,
         )
         add_problem(
             session_scope_function,
@@ -429,7 +432,11 @@ def test_check_problem_keyword(session_toy_db):
         add_problem_keyword(session_toy_db, "iris", "keyword")
 
     add_problem_keyword(
-        session_toy_db, "iris", "keyword", description="new description", force=True
+        session_toy_db,
+        "iris",
+        "keyword",
+        description="new description",
+        force=True,
     )
     problem_keyword = get_problem_keyword_by_name(session_toy_db, "iris", "keyword")
     assert problem_keyword.description == "new description"

@@ -120,7 +120,9 @@ def approve_users():
                 send_mail(to=user.email, subject=subject, body=body)
             elif request.form["submit_button"] == "Remove!":
                 delete_event_team(
-                    db.session, asked_event_team.event.name, asked_event_team.team.name
+                    db.session,
+                    asked_event_team.event.name,
+                    asked_event_team.team.name,
                 )
             message += "{}\n".format(asked_event_team)
         return redirect_to_user(
@@ -163,7 +165,9 @@ def approve_single_user(user_name):
         return redirect_to_user("No user {}".format(user_name), is_error=True)
     approve_user(db.session, user.name)
     return redirect_to_user(
-        "{} is signed up".format(user), is_error=False, category="Successful sign-up"
+        "{} is signed up".format(user),
+        is_error=False,
+        category="Successful sign-up",
     )
 
 
@@ -193,7 +197,8 @@ def approve_sign_up_for_event(event_name, user_name):
         )
     if not event or not user:
         return redirect_to_user(
-            "No event {} or no user {}".format(event_name, user_name), is_error=True
+            "No event {} or no user {}".format(event_name, user_name),
+            is_error=True,
         )
     sign_up_team(db.session, event.name, team_name=user.name, user_name=user.name)
 

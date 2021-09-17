@@ -151,7 +151,8 @@ def test_submission_model_set_error(session_scope_module):
 
 
 @pytest.mark.parametrize(
-    "state, expected_contributivity", [("scored", 0.3), ("training_error", 0.0)]
+    "state, expected_contributivity",
+    [("scored", 0.3), ("training_error", 0.0)],
 )
 def test_submission_model_set_contributivity(
     session_scope_module, state, expected_contributivity
@@ -260,7 +261,8 @@ def test_submission_file_model_property(session_scope_module):
         f".*submissions.*{submission_name}.*estimator.py", submission_file.path
     )
     assert re.match(
-        '<a href=".*estimator.py">.*estimator</a>', submission_file.name_with_link
+        '<a href=".*estimator.py">.*estimator</a>',
+        submission_file.name_with_link,
     )
     assert re.match(
         "from sklearn.ensemble import RandomForestClassifier.*",
@@ -537,7 +539,8 @@ def test_submission_on_cv_fold_model_backref(
 
 
 @pytest.mark.parametrize(
-    "backref, expected_type", [("submission_file_types", SubmissionFileTypeExtension)]
+    "backref, expected_type",
+    [("submission_file_types", SubmissionFileTypeExtension)],
 )
 def test_extension_model_backref(session_scope_module, backref, expected_type):
     extension = session_scope_module.query(Extension).first()

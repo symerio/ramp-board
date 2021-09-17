@@ -73,7 +73,8 @@ def test_workflow_model(session_scope_module):
 
 
 @pytest.mark.parametrize(
-    "backref, expected_type", [("problems", Problem), ("elements", WorkflowElement)]
+    "backref, expected_type",
+    [("problems", Problem), ("elements", WorkflowElement)],
 )
 def test_workflow_model_backref(session_scope_module, backref, expected_type):
     workflow = get_workflow(session_scope_module, "Estimator")

@@ -382,7 +382,11 @@ def get_user_interactions_by_name(session, name=None, output_format="dataframe")
     )
     if output_format == "html":
         return df.to_html(
-            escape=False, index=False, max_cols=None, max_rows=None, justify="left"
+            escape=False,
+            index=False,
+            max_cols=None,
+            max_rows=None,
+            justify="left",
         )
     return df
 

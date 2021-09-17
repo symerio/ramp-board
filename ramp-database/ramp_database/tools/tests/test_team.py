@@ -124,7 +124,10 @@ def test_sign_up_team(session_scope_function):
     event_name, username = "iris_test", "test_user"
 
     sign_up_team(
-        session_scope_function, event_name, team_name=username, user_name=username
+        session_scope_function,
+        event_name,
+        team_name=username,
+        user_name=username,
     )
     event_team = session_scope_function.query(EventTeam).all()
     assert len(event_team) == 1

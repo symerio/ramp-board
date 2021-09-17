@@ -254,7 +254,10 @@ def test_dispatcher_worker_retry(session_toy):
     dispatcher.launch_workers(session_toy)
 
     # Get one worker and set status to 'retry'
-    worker, (submission_id, submission_name) = dispatcher._processing_worker_queue.get()
+    worker, (
+        submission_id,
+        submission_name,
+    ) = dispatcher._processing_worker_queue.get()
     setattr(worker, "status", "retry")
     assert worker.status == "retry"
     # Add back to queue

@@ -79,7 +79,10 @@ class CondaEnvWorker(BaseWorker):
         if self.status not in ("collected", "retry"):
             raise ValueError("Collect the results before to kill the worker.")
         output_training_dir = os.path.join(
-            self.config["kit_dir"], "submissions", self.submission, "training_output"
+            self.config["kit_dir"],
+            "submissions",
+            self.submission,
+            "training_output",
         )
         if os.path.exists(output_training_dir):
             shutil.rmtree(output_training_dir)
@@ -162,7 +165,9 @@ class CondaEnvWorker(BaseWorker):
                 returncode = self._proc.returncode
             pred_dir = os.path.join(self.config["predictions_dir"], self.submission)
             output_training_dir = os.path.join(
-                self.config["submissions_dir"], self.submission, "training_output"
+                self.config["submissions_dir"],
+                self.submission,
+                "training_output",
             )
             if os.path.exists(pred_dir):
                 shutil.rmtree(pred_dir)

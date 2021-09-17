@@ -259,7 +259,10 @@ latex_documents = [
 
 # intersphinx configuration
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/{.major}".format(sys.version_info), None),
+    "python": (
+        "https://docs.python.org/{.major}".format(sys.version_info),
+        None,
+    ),
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
     "matplotlib": ("https://matplotlib.org/", None),
@@ -275,7 +278,13 @@ intersphinx_mapping = {
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ("index", "RAMP", "RAMP Documentation", ["Paris-Saclay Center for Data Science"], 1)
+    (
+        "index",
+        "RAMP",
+        "RAMP Documentation",
+        ["Paris-Saclay Center for Data Science"],
+        1,
+    )
 ]
 
 # If true, show URL addresses after external links.

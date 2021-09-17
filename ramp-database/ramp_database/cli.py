@@ -75,7 +75,14 @@ def export_leaderboards(config, event, path):
     help="User's additional hidden notes",
 )
 def add_user(
-    config, login, password, lastname, firstname, email, access_level, hidden_notes
+    config,
+    login,
+    password,
+    lastname,
+    firstname,
+    email,
+    access_level,
+    hidden_notes,
 ):
     """Add a new user in the database."""
     config = read_config(config)
@@ -244,7 +251,14 @@ def add_event(
     config = read_config(config)
     with session_scope(config["sqlalchemy"]) as session:
         event_module.add_event(
-            session, problem, event, title, sandbox, submissions_dir, is_public, force
+            session,
+            problem,
+            event,
+            title,
+            sandbox,
+            submissions_dir,
+            is_public,
+            force,
         )
 
 
