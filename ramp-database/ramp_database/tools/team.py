@@ -12,10 +12,12 @@ from ._query import select_event_team_by_user_name
 from ._query import select_team_by_name
 from ._query import select_user_by_name
 
-logger = logging.getLogger('RAMP-DATABASE')
+logger = logging.getLogger("RAMP-DATABASE")
 
 
-def add_team(session, team_name: str, user_name: str, is_individual: bool=True) -> Team:
+def add_team(
+    session, team_name: str, user_name: str, is_individual: bool = True
+) -> Team:
     """Create a new team
 
     Note that the behavior will change depending on whether it's
@@ -42,12 +44,12 @@ def add_team(session, team_name: str, user_name: str, is_individual: bool=True) 
     """
     user = select_user_by_name(session, user_name)
     team = Team(name=team_name, admin=user, is_individual=is_individual)
-    logger.info(f'Created {team} by {user}')
+    logger.info(f"Created {team} by {user}")
     session.add(team)
     session.commit()
 
     if not is_individual:
-        user_team = UserTeam(team_id=team.id, user_id=user.id, status='accepted')
+        user_team = UserTeam(team_id=team.id, user_id=user.id, status="accepted")
         session.add(user_team)
 
     session.commit()
@@ -70,15 +72,17 @@ def leave_all_teams(session, event_name: str, user_name: str):
     user_name : str
         The name of admin user
     """
-    (session.query(UserTeam)
-     .filter(UserTeam.status == 'accepted')
-     .filter(UserTeam.user_id == User.id)
-     .filter(User.name == user_name)
-     .filter(UserTeam.team_id == Team.id)
-     .filter(EventTeam.team_id == Team.id)
-     .filter(EventTeam.event_id == Event.id)
-     .filter(Event.name == event_name)
-     .delete(synchronize_session='fetch'))
+    (
+        session.query(UserTeam)
+        .filter(UserTeam.status == "accepted")
+        .filter(UserTeam.user_id == User.id)
+        .filter(User.name == user_name)
+        .filter(UserTeam.team_id == Team.id)
+        .filter(EventTeam.team_id == Team.id)
+        .filter(EventTeam.event_id == Event.id)
+        .filter(Event.name == event_name)
+        .delete(synchronize_session="fetch")
+    )
     session.commit()
 
 
@@ -134,15 +138,20 @@ def sign_up_team(session, event_name, team_name, user_name: Optional[str] = None
     """
     event, team, event_team = ask_sign_up_team(session, event_name, team_name)
     # setup the sandbox
-    path_sandbox_submission = os.path.join(event.problem.path_ramp_kit,
-                                           'submissions',
-                                           event.ramp_sandbox_name)
+    path_sandbox_submission = os.path.join(
+        event.problem.path_ramp_kit, "submissions", event.ramp_sandbox_name
+    )
     submission_name = event.ramp_sandbox_name
-    submission = add_submission(session, event_name, team_name,
-                                submission_name, path_sandbox_submission,
-                                user_name=user_name)
-    logger.info('Copying the submission files into the deployment folder')
-    logger.info('Adding {}'.format(submission))
+    submission = add_submission(
+        session,
+        event_name,
+        team_name,
+        submission_name,
+        path_sandbox_submission,
+        user_name=user_name,
+    )
+    logger.info("Copying the submission files into the deployment folder")
+    logger.info("Adding {}".format(submission))
     event_team.approved = True
     session.commit()
 
@@ -204,7 +213,9 @@ def get_event_team_by_user_name(session, event_name, user_name):
     return select_event_team_by_user_name(session, event_name, user_name)
 
 
-def add_team_member(session, team_name: str, user_name: str, status='asked') -> List[str]:
+def add_team_member(
+    session, team_name: str, user_name: str, status="asked"
+) -> List[str]:
     """Add a member to the team
 
     Parameters
@@ -227,7 +238,7 @@ def add_team_member(session, team_name: str, user_name: str, status='asked') -> 
     user = select_user_by_name(session, user_name)
     individual_team = select_team_by_name(session, user_name)
     if team.is_individual:
-        return [f'Cannot add members to an individual Team({team_name})']
+        return [f"Cannot add members to an individual Team({team_name})"]
 
     event_team = session.query(EventTeam).filter_by(team_id=team.id).one_or_none()
     event = None
@@ -235,26 +246,30 @@ def add_team_member(session, team_name: str, user_name: str, status='asked') -> 
         # Team is signed up to an event. Make sure the user is also signed up to the same event,
         # otherwise they cannot be added to the team
         event = event_team.event
-        if (session.query(EventTeam)
+        if (
+            session.query(EventTeam)
             .filter_by(event_id=event_team.event.id, team_id=individual_team.id)
-            .count() == 0):
-            return [(f"{team} is signed up to {event} however {user} isn't signed up "
-                     f"to this event. Therefore cannot invite them.")]
+            .count()
+            == 0
+        ):
+            return [
+                (
+                    f"{team} is signed up to {event} however {user} isn't signed up "
+                    f"to this event. Therefore cannot invite them."
+                )
+            ]
 
-    if (session.query(UserTeam)
-        .filter_by(user=user, team=team)
-        .count()):
-        logging.info(f'add_team_member: {user} is already in {team}. Skipping')
+    if session.query(UserTeam).filter_by(user=user, team=team).count():
+        logging.info(f"add_team_member: {user} is already in {team}. Skipping")
 
-
-    logging.info(f'Adding {user} to {team} both belonging to {event}')
+    logging.info(f"Adding {user} to {team} both belonging to {event}")
     user_team = UserTeam(user_id=user.id, team_id=team.id, status=status)
     session.add(user_team)
     session.commit()
     return []
 
 
-def get_team_members(session, team_name: str, status='accepted') -> List[Team]:
+def get_team_members(session, team_name: str, status="accepted") -> List[Team]:
     """Get team members
 
     Parameters
@@ -271,20 +286,29 @@ def get_team_members(session, team_name: str, status='accepted') -> List[Team]:
     teams:
        a list of teams.
     """
-    if status not in ['asked', 'accepted']:
+    if status not in ["asked", "accepted"]:
         raise ValueError(f"status={status} must be one of ['asked', 'accepted']")
     team = session.query(Team).filter_by(name=team_name).one_or_none()
     if team is None:
         return []
-    members = (session.query(User)
-               .filter(User.id == UserTeam.user_id)
-               .filter(UserTeam.team_id == team.id)
-               .filter(UserTeam.status == status)
-               .distinct().all())
+    members = (
+        session.query(User)
+        .filter(User.id == UserTeam.user_id)
+        .filter(UserTeam.team_id == team.id)
+        .filter(UserTeam.status == status)
+        .distinct()
+        .all()
+    )
     return list(set(members))
 
 
-def respond_team_invite(session, user_name: str,  team_name: str, action: str, event_name: Optional[str] = None):
+def respond_team_invite(
+    session,
+    user_name: str,
+    team_name: str,
+    action: str,
+    event_name: Optional[str] = None,
+):
     """Respond to a team invite
 
     Either by accepting or declining. When event_name is not None, the user
@@ -302,24 +326,28 @@ def respond_team_invite(session, user_name: str,  team_name: str, action: str, e
         The RAMP event name. Only used to leave all current teams for the event.
         If None, no teams will be left.
     """
-    user_team = (session.query(UserTeam)
-             .filter(User.id == UserTeam.user_id)
-             .filter(Team.id == UserTeam.team_id)
-             .filter(User.name == user_name)
-             .filter(Team.name == team_name)
-             .filter(UserTeam.status == "asked")
-             .one_or_none())
+    user_team = (
+        session.query(UserTeam)
+        .filter(User.id == UserTeam.user_id)
+        .filter(Team.id == UserTeam.team_id)
+        .filter(User.name == user_name)
+        .filter(Team.name == team_name)
+        .filter(UserTeam.status == "asked")
+        .one_or_none()
+    )
     if user_team is None:
-        raise ValueError(f"Could not find invites for User({user_name}) "
-                         f"to Team({team_name})")
-    if action == 'accept':
+        raise ValueError(
+            f"Could not find invites for User({user_name}) " f"to Team({team_name})"
+        )
+    if action == "accept":
         if event_name is not None:
             leave_all_teams(session, event_name, user_name)
         user_team.status = "accepted"
         session.add(user_team)
-    elif action == 'decline':
+    elif action == "decline":
         session.delete(user_team)
     else:
-        raise ValueError(f"unknown action={action} expected one of "
-                         f"['accept', 'decline']")
+        raise ValueError(
+            f"unknown action={action} expected one of " f"['accept', 'decline']"
+        )
     session.commit()

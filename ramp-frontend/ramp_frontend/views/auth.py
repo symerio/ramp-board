@@ -40,8 +40,8 @@ from ..forms import UserUpdateProfileForm
 from ..utils import body_formatter_user
 from ..utils import send_mail
 
-logger = logging.getLogger('RAMP-FRONTEND')
-mod = Blueprint('auth', __name__)
+logger = logging.getLogger("RAMP-FRONTEND")
+mod = Blueprint("auth", __name__)
 ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 
@@ -59,48 +59,45 @@ def load_user(id):
     return User.query.get(id)
 
 
-@mod.route("/login", methods=['GET', 'POST'])
+@mod.route("/login", methods=["GET", "POST"])
 def login():
     """Login request."""
-    if app.config['TRACK_USER_INTERACTION']:
-        add_user_interaction(db.session, interaction='landing')
+    if app.config["TRACK_USER_INTERACTION"]:
+        add_user_interaction(db.session, interaction="landing")
 
     if flask_login.current_user.is_authenticated:
-        logger.info('User already logged-in')
-        session['logged_in'] = True
-        return redirect(url_for('ramp.problems'))
+        logger.info("User already logged-in")
+        session["logged_in"] = True
+        return redirect(url_for("ramp.problems"))
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = get_user_by_name_or_email(db.session,
-                                         name=form.user_name.data)
+        user = get_user_by_name_or_email(db.session, name=form.user_name.data)
         if user is None:
             msg = 'User "{}" does not exist'.format(form.user_name.data)
             flash(msg)
             logger.info(msg)
-            return redirect(url_for('auth.login'))
-        if not check_password(form.password.data,
-                              user.hashed_password):
-            msg = 'Wrong password'
+            return redirect(url_for("auth.login"))
+        if not check_password(form.password.data, user.hashed_password):
+            msg = "Wrong password"
             flash(msg)
             logger.info(msg)
-            return redirect(url_for('auth.login'))
+            return redirect(url_for("auth.login"))
         flask_login.login_user(user, remember=True, duration=timedelta(days=90))
-        session['logged_in'] = True
+        session["logged_in"] = True
         user.is_authenticated = True
         db.session.commit()
-        logger.info('User "{}" is logged in'
-                    .format(flask_login.current_user.name))
-        if app.config['TRACK_USER_INTERACTION']:
+        logger.info('User "{}" is logged in'.format(flask_login.current_user.name))
+        if app.config["TRACK_USER_INTERACTION"]:
             add_user_interaction(
-                db.session, interaction='login', user=flask_login.current_user
+                db.session, interaction="login", user=flask_login.current_user
             )
-        next_ = request.args.get('next')
+        next_ = request.args.get("next")
         if next_ is None:
-            next_ = url_for('ramp.problems')
+            next_ = url_for("ramp.problems")
         return redirect(next_)
 
-    return render_template('login.html', form=form)
+    return render_template("login.html", form=form)
 
 
 @mod.route("/logout")
@@ -108,23 +105,23 @@ def login():
 def logout():
     """Logout request."""
     user = flask_login.current_user
-    if app.config['TRACK_USER_INTERACTION']:
-        add_user_interaction(db.session, interaction='logout', user=user)
-    session['logged_in'] = False
+    if app.config["TRACK_USER_INTERACTION"]:
+        add_user_interaction(db.session, interaction="logout", user=user)
+    session["logged_in"] = False
     user.is_authenticated = False
     db.session.commit()
-    logger.info('{} is logged out'.format(user))
+    logger.info("{} is logged out".format(user))
     flask_login.logout_user()
 
-    return redirect(url_for('auth.login'))
+    return redirect(url_for("auth.login"))
 
 
-@mod.route("/sign_up", methods=['GET', 'POST'])
+@mod.route("/sign_up", methods=["GET", "POST"])
 def sign_up():
     """Sign-up request."""
     if flask_login.current_user.is_authenticated:
-        session['logged_in'] = True
-        return redirect(url_for('ramp.problems'))
+        session["logged_in"] = True
+        return redirect(url_for("ramp.problems"))
 
     form = UserCreateProfileForm()
     if form.validate_on_submit():
@@ -144,50 +141,47 @@ def sign_up():
                 website_url=form.website_url.data,
                 bio=form.bio.data,
                 is_want_news=form.is_want_news.data,
-                access_level='not_confirmed',
+                access_level="not_confirmed",
                 universities_id=form.university.data.id,
                 graduation_year=form.graduation_year.data,
             )
         except NameClashError as e:
             flash(str(e))
             logger.info(str(e))
-            return redirect(url_for('auth.sign_up'))
+            return redirect(url_for("auth.sign_up"))
         # send an email to the participant such that he can confirm his email
         token = ts.dumps(user.email)
-        recover_url = url_for(
-            'auth.user_confirm_email', token=token, _external=True
-        )
+        recover_url = url_for("auth.user_confirm_email", token=token, _external=True)
         subject = "Confirm your email for signing-up to RAMP"
-        body = (f'Dear {user.firstname}, \n\n'
-                f'Click on the following link to confirm your email'
-                f' address and finalize your sign-up to RAMP.\n\n '
-                f'   {recover_url} \n\n'
-                f'Please note that your signup request will be approved '
-                f'after you send your proof of student status and expected '
-                f'date of graduation to Jiao Li (li.jiao@huawei.com). \n\n'
-                f'Please also note that by signing up, you accept the Terms of '
-                f'Use [1], the Privacy Notice [2], and the Cookies Policy [3].\n\n'
-                f' [1] https://xianti.fr/terms-of-usage \n'
-                f' [2] https://xianti.fr/privacy-policy \n'
-                f' [3] https://xianti.fr/cookies-policy \n\n'
-                f'See you on the RAMP website!\n'
-                f'The Huawei - RAMP team'
-                )
-        send_mail(user.email, subject, body)
-        logger.info(
-            '{} has signed-up to RAMP'.format(user.name)
+        body = (
+            f"Dear {user.firstname}, \n\n"
+            f"Click on the following link to confirm your email"
+            f" address and finalize your sign-up to RAMP.\n\n "
+            f"   {recover_url} \n\n"
+            f"Please note that your signup request will be approved "
+            f"after you send your proof of student status and expected "
+            f"date of graduation to Jiao Li (li.jiao@huawei.com). \n\n"
+            f"Please also note that by signing up, you accept the Terms of "
+            f"Use [1], the Privacy Notice [2], and the Cookies Policy [3].\n\n"
+            f" [1] https://xianti.fr/terms-of-usage \n"
+            f" [2] https://xianti.fr/privacy-policy \n"
+            f" [3] https://xianti.fr/cookies-policy \n\n"
+            f"See you on the RAMP website!\n"
+            f"The Huawei - RAMP team"
         )
+        send_mail(user.email, subject, body)
+        logger.info("{} has signed-up to RAMP".format(user.name))
         flash(
             "We sent your confirmation email. Please check your emails and click on "
             "the confirmation link"
         )
-        return redirect(url_for('auth.login'))
+        return redirect(url_for("auth.login"))
 
     university_names = db.session.query(University.name).all()
-    return render_template('sign_up.html', form=form, university_names=university_names)
+    return render_template("sign_up.html", form=form, university_names=university_names)
 
 
-@mod.route("/update_profile", methods=['GET', 'POST'])
+@mod.route("/update_profile", methods=["GET", "POST"])
 @flask_login.login_required
 def update_profile():
     """User profile update."""
@@ -211,7 +205,7 @@ def update_profile():
             graduation_year=form.graduation_year.data,
         )
         # send_register_request_mail(user)
-        return redirect(url_for('ramp.problems'))
+        return redirect(url_for("ramp.problems"))
     form.lastname.data = flask_login.current_user.lastname
     form.firstname.data = flask_login.current_user.firstname
     form.email.data = flask_login.current_user.email
@@ -226,16 +220,16 @@ def update_profile():
     form.university.data = flask_login.current_user.university
     form.graduation_year.data = flask_login.current_user.graduation_year
 
-    return render_template('update_profile.html', form=form)
+    return render_template("update_profile.html", form=form)
 
 
-@mod.route("/delete_profile", methods=['GET'])
+@mod.route("/delete_profile", methods=["GET"])
 @flask_login.login_required
 def delete_profile():
     user = flask_login.current_user
     user_id = user.id
     user_name = user.name
-    session['logged_in'] = False
+    session["logged_in"] = False
     user.name = f"deleted_{user_id}"
     user.is_authenticated = False
     user.hashed_password = uuid.uuid4().hex
@@ -252,47 +246,48 @@ def delete_profile():
         lastname="deleted",
         firstname="deleted",
     )
-    logger.info(f'User {user_name} profile is deleted.')
+    logger.info(f"User {user_name} profile is deleted.")
     flask_login.logout_user()
 
-    return redirect('/')
+    return redirect("/")
 
 
-@mod.route('/reset_password', methods=["GET", "POST"])
+@mod.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
     """Reset password of a RAMP user."""
     form = EmailForm()
-    error = ''
+    error = ""
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).one_or_none()
-        if user and user.access_level != 'asked':
+        if user and user.access_level != "asked":
             token = ts.dumps(user.email)
-            recover_url = url_for(
-                'auth.reset_with_token', token=token, _external=True
-            )
+            recover_url = url_for("auth.reset_with_token", token=token, _external=True)
 
             subject = "Password reset requested - RAMP website"
-            body = ('Hi {}, \n\nclick on the link to reset your password:\n'
-                    .format(user.firstname))
-            body += recover_url
-            body += '\n\nSee you on the RAMP website!'
-            send_mail(user.email, subject, body)
-            logger.info(
-                'Password reset requested for user {}'.format(user.name)
+            body = "Hi {}, \n\nclick on the link to reset your password:\n".format(
+                user.firstname
             )
+            body += recover_url
+            body += "\n\nSee you on the RAMP website!"
+            send_mail(user.email, subject, body)
+            logger.info("Password reset requested for user {}".format(user.name))
             logger.info(recover_url)
-            flash('An email to reset your password has been sent')
-            return redirect(url_for('auth.login'))
+            flash("An email to reset your password has been sent")
+            return redirect(url_for("auth.login"))
         elif user is None:
-            error = ('The email address is not linked to any user. You can '
-                     'sign-up instead.')
+            error = (
+                "The email address is not linked to any user. You can "
+                "sign-up instead."
+            )
         else:
-            error = ('Your account has not been yet approved. You cannot '
-                     'change the password already.')
-    return render_template('reset_password.html', form=form, error=error)
+            error = (
+                "Your account has not been yet approved. You cannot "
+                "change the password already."
+            )
+    return render_template("reset_password.html", form=form, error=error)
 
 
-@mod.route('/reset/<token>', methods=["GET", "POST"])
+@mod.route("/reset/<token>", methods=["GET", "POST"])
 def reset_with_token(token):
     """Reset password by passing a token (email).
 
@@ -311,20 +306,20 @@ def reset_with_token(token):
     if form.validate_on_submit():
         user = User.query.filter_by(email=email).one_or_none()
         if user is None:
-            logger.error('The error was deleted before resetting his/her '
-                         'password')
+            logger.error("The error was deleted before resetting his/her " "password")
             abort(404)
-        (User.query.filter_by(email=email)
-                   .update({
-                       "hashed_password":
-                       hash_password(form.password.data).decode()}))
+        (
+            User.query.filter_by(email=email).update(
+                {"hashed_password": hash_password(form.password.data).decode()}
+            )
+        )
         db.session.commit()
-        return redirect(url_for('auth.login'))
+        return redirect(url_for("auth.login"))
 
-    return render_template('reset_with_token.html', form=form, token=token)
+    return render_template("reset_with_token.html", form=form, token=token)
 
 
-@mod.route('/confirm_email/<token>', methods=["GET", "POST"])
+@mod.route("/confirm_email/<token>", methods=["GET", "POST"])
 def user_confirm_email(token):
     """Confirm a user account using his email address and a token to approve.
 
@@ -342,36 +337,35 @@ def user_confirm_email(token):
     user = User.query.filter_by(email=email).one_or_none()
     if user is None:
         flash(
-            'You did not sign-up yet to RAMP. Please sign-up first.',
-            category='error'
+            "You did not sign-up yet to RAMP. Please sign-up first.", category="error"
         )
-        return redirect(url_for('auth.sign_up'))
-    elif user.access_level in ('user', 'admin'):
+        return redirect(url_for("auth.sign_up"))
+    elif user.access_level in ("user", "admin"):
         flash(
             "Your account is already approved. You don't need to confirm your "
-            "email address", category='error'
+            "email address",
+            category="error",
         )
-        return redirect(url_for('auth.login'))
-    elif user.access_level == 'asked':
+        return redirect(url_for("auth.login"))
+    elif user.access_level == "asked":
         flash(
             "Your email address has already been confirmed. Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible.",
-            category='error'
+            category="error",
         )
-        return redirect(url_for('general.index'))
-    User.query.filter_by(email=email).update({'access_level': 'asked'})
+        return redirect(url_for("general.index"))
+    User.query.filter_by(email=email).update({"access_level": "asked"})
     db.session.commit()
-    admin_users = User.query.filter_by(access_level='admin')
+    admin_users = User.query.filter_by(access_level="admin")
     for admin in admin_users:
-        subject = 'Approve registration of {}'.format(
-            user.name
-        )
+        subject = "Approve registration of {}".format(user.name)
         body = body_formatter_user(user)
-        url_approve = ('http://{}/sign_up/{}'
-                       .format(app.config['DOMAIN_NAME'], user.name))
-        body += 'Click on the link to approve the registration '
-        body += 'of this user: {}'.format(url_approve)
+        url_approve = "http://{}/sign_up/{}".format(
+            app.config["DOMAIN_NAME"], user.name
+        )
+        body += "Click on the link to approve the registration "
+        body += "of this user: {}".format(url_approve)
         send_mail(admin.email, subject, body)
     flash(
         "Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible."
     )
-    return redirect(url_for('auth.login'))
+    return redirect(url_for("auth.login"))
