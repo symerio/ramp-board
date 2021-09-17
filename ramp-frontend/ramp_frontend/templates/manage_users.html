@@ -64,7 +64,7 @@
                       <th>Country</th>
                       <th>Signup date</th>
                   </tr>
-              </thead>	      
+              </thead>
               <tbody>
                   {% for user in all_users %}
 	          <tr>
@@ -93,7 +93,7 @@
 {% block scripts %}
 <script>
   $(document).ready( function () {
-	  $('#user-table').DataTable({ 
+	  $('#user-table').DataTable({
 		  pageLength: 50,
 		  ordering: true,
 		  //order: [(9, "desc")],
