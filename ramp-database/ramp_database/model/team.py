@@ -63,14 +63,17 @@ class Team(Model):
         self.is_individual = is_individual
 
     def __str__(self):
-        return "Team({})".format(self.name)
+        return f"Team({self.name})"
 
     def __repr__(self):
-        return "Team(name={}, admin_name={})".format(self.name, self.admin.name)
+        return (
+            f"Team(name={self.name}, admin_name={self.admin.name}, "
+            f"is_individual={self.is_individual})"
+        )
 
 
 class UserTeam(Model):
-    """User to team many to many association table
+    """User to team many-to-many association table.
 
     Parameters
     ----------
@@ -79,7 +82,7 @@ class UserTeam(Model):
     team_id : int
         The ID of the team.
     status: str
-        The relationship status. One of "asked", "accepted", "admin".
+        The relationship status. One of "asked", "accepted".
 
     Attributes
     ----------
@@ -109,3 +112,9 @@ class UserTeam(Model):
         self.user_id = user_id
         self.team_id = team_id
         self.status = status
+
+    def __repr__(self):
+        return (
+            f"UserTeam(user_id={self.user_id}, team_id={self.team_id}, "
+            f"status='{self.status}')"
+        )
