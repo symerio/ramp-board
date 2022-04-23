@@ -1,6 +1,7 @@
 """Blueprint for all authentication functions for the RAMP frontend."""
 import logging
 import uuid
+from datetime import timedelta
 
 import flask_login
 
@@ -25,8 +26,7 @@ from ramp_database.tools.user import add_user_interaction
 from ramp_database.tools.user import get_user_by_name_or_email
 from ramp_database.tools.user import set_user_by_instance
 
-from ramp_database.model import User, Team
-
+from ramp_database.model import User, University, Team
 from ramp_database.exceptions import NameClashError
 
 from ramp_frontend import db
@@ -84,7 +84,7 @@ def login():
             flash(msg)
             logger.info(msg)
             return redirect(url_for("auth.login"))
-        flask_login.login_user(user, remember=True)
+        flask_login.login_user(user, remember=True, duration=timedelta(days=90))
         session["logged_in"] = True
         user.is_authenticated = True
         db.session.commit()
@@ -143,6 +143,8 @@ def sign_up():
                 bio=form.bio.data,
                 is_want_news=form.is_want_news.data,
                 access_level="not_confirmed",
+                universities_id=form.university.data.id,
+                graduation_year=form.graduation_year.data,
             )
         except NameClashError as e:
             flash(str(e))
@@ -154,21 +156,31 @@ def sign_up():
         recover_url = url_for("auth.user_confirm_email", token=token, _external=True)
         subject = "Confirm your email for signing-up to RAMP"
         body = (
-            "Hi {}, \n\n Click on the following link to confirm your email"
-            " address and finalize your sign-up to RAMP.\n\n Note that "
-            "your account still needs to be approved by a RAMP "
-            "administrator.\n\n".format(user.firstname)
+            f"Dear {user.firstname}, \n\n"
+            f"Click on the following link to confirm your email"
+            f" address and finalize your sign-up to RAMP.\n\n "
+            f"   {recover_url} \n\n"
+            f"Please note that your signup request will be approved "
+            f"after you send your proof of student status and expected "
+            f"date of graduation to Jiao Li (li.jiao@huawei.com). \n\n"
+            f"Please also note that by signing up, you accept the Terms of "
+            f"Use [1], the Privacy Notice [2], and the Cookies Policy [3].\n\n"
+            f" [1] https://xianti.fr/terms-of-usage \n"
+            f" [2] https://xianti.fr/privacy-policy \n"
+            f" [3] https://xianti.fr/cookies-policy \n\n"
+            f"See you on the RAMP website!\n"
+            f"The Huawei - RAMP team"
         )
-        body += recover_url
-        body += "\n\nSee you on the RAMP website!"
         send_mail_with_context(user.email, subject, body)
         logger.info("{} has signed-up to RAMP".format(user.name))
         flash(
-            "We sent a confirmation email. Go read your email and click on "
+            "We sent your confirmation email. Please check your emails and click on "
             "the confirmation link"
         )
         return redirect(url_for("auth.login"))
-    return render_template("sign_up.html", form=form)
+
+    university_names = db.session.query(University.name).all()
+    return render_template("sign_up.html", form=form, university_names=university_names)
 
 
 @mod.route("/update_profile", methods=["GET", "POST"])
@@ -191,6 +203,8 @@ def update_profile():
             github_url=form.github_url.data,
             website_url=form.website_url.data,
             is_want_news=form.is_want_news.data,
+            universities_id=form.university.data.id,
+            graduation_year=form.graduation_year.data,
         )
         # send_register_request_mail(user)
         return redirect(url_for("ramp.problems"))
@@ -205,6 +219,9 @@ def update_profile():
     form.website_url.data = flask_login.current_user.website_url
     form.bio.data = flask_login.current_user.bio
     form.is_want_news.data = flask_login.current_user.is_want_news
+    form.university.data = flask_login.current_user.university
+    form.graduation_year.data = flask_login.current_user.graduation_year
+
     return render_template("update_profile.html", form=form)
 
 
@@ -336,8 +353,7 @@ def user_confirm_email(token):
         return redirect(url_for("auth.login"))
     elif user.access_level == "asked":
         flash(
-            "Your email address already has been confirmed. You need to wait "
-            "for an approval from a RAMP administrator",
+            "Your email address has already been confirmed. Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible.",
             category="error",
         )
         return redirect(url_for("general.index"))
@@ -355,7 +371,6 @@ def user_confirm_email(token):
         body += "of this user: {}".format(url_approve)
         send_mail_with_context(admin.email, subject, body)
     flash(
-        "An email has been sent to the RAMP administrator(s) who will "
-        "approve your account"
+        "Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible."
     )
     return redirect(url_for("auth.login"))

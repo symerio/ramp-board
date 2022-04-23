@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}My team{% endblock %}
+
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="modal fade modal-warning" id="formerror" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  {% for category, message in messages %}
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">{{ category }}</h4>
+      </div>
+      <div class="modal-body">
+        <div class="modal-message">
+          {{ message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-warning" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endif %}
+{% endwith %}
+
+<div class="container">
+  <div class="row">
+    <h1> My teams </h1>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="title">Current team<br />
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-sm-12 col-lg-12">
+	       {% if event_team.team.is_individual %}
+	         You are participating in this event as an individual.
+	       {% else %}
+                 <label>Team name</label>
+		 {{ event_team.team.name }} <br />
+		 <!--
+	         <input id="name" name="name" required minlength="4" value="{{ event_team.team.name }}">
+	         <button>Update</button><br />
+		 -->
+	         <label>Team id:</label>  {{ event_team.team.id }} <br />
+	         <!-- <label>Team admin:</label>  {{ event_team.team.admin.name }} <br /> -->
+                 <label>Members</label><br />
+	         <ul>
+                   {% for user in team_members %}
+	           <li> {{ user.name }} </li>
+	           {% endfor %}
+	         </ul>
+		 {% if asked_members %}
+                 <label>Pending members</label><br />
+	         <ul>
+                   {% for user in asked_members %}
+		   <li> {{ user.name }} </li>
+	           {% endfor %}
+	         </ul>
+		 {% endif %}
+                 <label>Add members</label><br />
+		 <form name="invite_team_member" action="/events/{{ event_team.event.name }}/team/add-user" method="POST">
+	         <input list="all-users" name='invite_user_name' placeholder="Start typing...">
+	         <input type='submit' value="Invite">
+	         <datalist id="all-users">
+                   {% for user in all_users %}
+	           <option>{{ user.name }}</option>
+	           {% endfor %}
+	         </datalist>
+	         </form>
+	         <br />
+	         <br />
+
+		 <form name="create_new_team" action="/events/{{ event_team.event.name }}/team/leave" method="POST">
+	          {% if event_team.is_locked %}
+	          <input type='submit' value="Leave team" disabled>
+		  {% else %}
+	          <input type='submit' value="Leave team">
+		  {% endif %}
+	        </form>
+	       {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="title">Team invites<br />
+
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-sm-12 col-lg-12">
+	       <div>
+	       {% if team_invites %}
+	       <ul>
+                 {% for team in team_invites %}
+		 <li>
+		   <form name="create_new_team_{{ team.id }}" action="/events/{{ event_team.event.name }}/team/invites" method="POST">
+		   <input type="text" name="team_id" value='{{ team.id }}' hidden>
+		   <label>{{ team.name }}</label>
+	           {% if event_team.is_locked %}
+	           <input type='submit' value="Accept" disabled>
+	           {% else %}
+	           <input type='submit' value="Accept">
+		   {% endif %}
+	           </form>
+		 </li>
+		 {% endfor %}
+	       </ul>
+	       <em> Note that if you accept a team invite, you will leave your current team.</em>
+	       {% else %}
+	       You don't have any new team invites.
+	       {% endif %}
+	       </div>
+               <br />
+
+	       <form name="create_new_team" method="POST">
+	       <label for="new_team_name">Create new team</label>
+	       <input type="text" id="new_team_name" name="new_team_name" required minlength="2" maxlength="19">
+	       {% if event_team.is_locked %}
+	       <input type='submit' value="Submit" disabled>
+	       {% else %}
+	       <input type='submit' value="Submit">
+	       {% endif %}
+	       </form>
+	       {% if event_team.is_locked %}
+	       <em> Since you have made submissions, you can no longer create teams and leave the current team.</em>
+	       {% else %}
+	       <em> Note that by creating a new team, you will leave your current team.</em>
+	       {% endif %}
+
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(() => {
+   $("#formerror").modal("toggle");
+});
+</script>
+{% endblock %}

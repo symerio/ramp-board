@@ -103,7 +103,7 @@ class UserTeam(Model):
     team = relationship(
         "Team", backref=backref("team_user_team", cascade="all, delete")
     )
-    status = Column(Enum("asked", "accepted", name="status"), default="asked")
+    status = Column(Enum("asked", "accepted", "admin", name="status"), default="asked")
     update_timestamp = Column(
         DateTime, onupdate=sql.func.now(), server_default=sql.func.now()
     )

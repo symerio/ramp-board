@@ -57,7 +57,9 @@ def approve_users():
     if request.method == "GET":
         # TODO: replace by some get_functions
         asked_users = (
-            User.query.filter_by(access_level="asked").order_by(User.id.desc()).all()
+            User.query.filter_by(access_level="asked")
+            .order_by(User.update_timestamp.desc())
+            .all()
         )
         asked_sign_up = EventTeam.query.filter_by(approved=False).all()
         return render_template(
@@ -76,10 +78,15 @@ def approve_users():
             if request.form["submit_button"] == "Approve!":
                 approve_user(db.session, asked_user)
 
-                subject = "Your RAMP account has been approved"
+                subject = "Subject: Your Xianti RAMP account has been approved"
                 body = (
-                    "{}, your account has been approved. You can now "
-                    "sign-up for any open RAMP event.".format(user.name)
+                    f"Dear {user.firstname},\n\n"
+                    f"Your xianti.fr account has been approved. You will now be able to sign-up for any RAMP Data Challenge, subject to eligibility, once it is open.\n\n"
+                    f"Also please join the Huawei RAMP Slack\n"
+                    f"(https://join.slack.com/t/huaweiramp/shared_invite/zt-qbf4vy9s-0NS4~V898h40x8cI2KHEfQ)\n"
+                    f"where all event related announcements will be made. For example, if you encounter any difficulties with the process or the platform, you can also ask questions there.\n\n"
+                    f"Best regards,\n"
+                    f"The Huawei - RAMP team"
                 )
                 send_mail_with_context(to=user.email, subject=subject, body=body)
             elif request.form["submit_button"] == "Remove!":
@@ -95,18 +102,22 @@ def approve_users():
                 sign_up_team(
                     db.session,
                     asked_event_team.event.name,
-                    asked_event_team.team.name,
+                    team_name=asked_event_team.team.name,
+                    user_name=asked_event_team.team.name,
                 )
 
                 subject = "Signed up for the RAMP event {}".format(
                     asked_event_team.event.name
                 )
                 body = (
-                    "{}, you have been registered to the RAMP event {}. "
-                    "You can now proceed to your sandbox and make "
-                    "submissions.\nHave fun!!!".format(
-                        user.name, asked_event_team.event.name
-                    )
+                    f"Dear {user.firstname}, \n\n"
+                    f"you have been registered to the RAMP event {asked_event_team.event.name}.\n"
+                    f"You can now proceed to your sandbox for this event and make "
+                    f"submissions.\n\n"
+                    f"Please note that by signing up to this event, you accept the Challenge Rules "
+                    f"(https://xianti.fr/june-2021-challenge#rules).\n\n"
+                    f"See you on the RAMP website!\n"
+                    f"The Huawei - RAMP team"
                 )
                 send_mail_with_context(to=user.email, subject=subject, body=body)
             elif request.form["submit_button"] == "Remove!":
@@ -191,7 +202,7 @@ def approve_sign_up_for_event(event_name, user_name):
             "No event {} or no user {}".format(event_name, user_name),
             is_error=True,
         )
-    sign_up_team(db.session, event.name, user.name)
+    sign_up_team(db.session, event.name, team_name=user.name, user_name=user.name)
 
     subject = "Signed up for the RAMP event {}".format(event.name)
     body = (

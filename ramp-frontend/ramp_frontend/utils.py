@@ -46,29 +46,14 @@ def body_formatter_user(user):
     body : str
         The email body.
     """
-    body = """
-    user = {}
-    name = {} {}
-    email = {}
-    linkedin = {}
-    twitter = {}
-    facebook = {}
-    github = {}
-    notes = {}
-    bio = {}
-
-    """.format(
-        user.name,
-        user.firstname,
-        user.lastname,
-        user.email,
-        user.linkedin_url,
-        user.twitter_url,
-        user.facebook_url,
-        user.github_url,
-        user.hidden_notes,
-        user.bio,
-    )
+    body = f"""
+    user = {user.name}
+    name = {user.firstname} {user.lastname}
+    email = {user.email}
+    """
+    if user.university is not None:
+        body += f"university = {user.university.name} " f"({user.university.country})\n"
+    body += f"graduation year = {user.graduation_year}"
 
     return body
 

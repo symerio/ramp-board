@@ -9,6 +9,7 @@ from ramp_utils.testing import database_config_template
 from ramp_utils.testing import ramp_config_template
 
 from ramp_database.model import Model
+from ramp_database.model import User
 from ramp_database.testing import create_toy_db
 from ramp_database.utils import setup_db
 from ramp_database.utils import session_scope
@@ -187,8 +188,8 @@ def test_delete_profile(client_session):
     assert rv.location == "http://localhost/"
     session.refresh(user)
     assert not user.is_authenticated
-    assert user.firstname == "deleted"
-    assert user.lastname == "deleted"
+    assert user.firstname == f"deleted"
+    assert user.lastname == f"deleted"
     assert user.email == f"{user_id}@deleted.com"
     assert user.github_url == ""
     assert user.hashed_password != user_password

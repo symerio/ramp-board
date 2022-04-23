@@ -35,6 +35,8 @@ def add_user(
     website_url="",
     bio="",
     is_want_news=True,
+    universities_id=None,
+    graduation_year=None,
 ):
     """Add a new user in the database.
 
@@ -72,6 +74,10 @@ def add_user(
         User biography.
     is_want_news : bool, default is True
         User wish to receive some news.
+    universities_id: int, default None
+        The id of the university
+    graduation_year: int, default=None
+        Graduation year for students
 
     Returns
     -------
@@ -98,6 +104,8 @@ def add_user(
         website_url=website_url,
         bio=bio,
         is_want_news=is_want_news,
+        universities_id=universities_id,
+        graduation_year=graduation_year,
     )
 
     # Creating default team with the same name as the user
@@ -397,6 +405,8 @@ def set_user_by_instance(
     website_url="",
     bio="",
     is_want_news=True,
+    universities_id=None,
+    graduation_year=None,
 ):
     """Set the information of a user.
 
@@ -428,9 +438,14 @@ def set_user_by_instance(
         User biography.
     is_want_news : bool, default is True
         User wish to receive some news.
+    universities_id: int, default None
+        The id of the university
+    graduation_year: int, default=None
+        Graduation year for students
     """
     logger.info('Update the profile of "{}"'.format(user))
 
+    reset_access_level = False
     for field in (
         "lastname",
         "firstname",
@@ -443,17 +458,25 @@ def set_user_by_instance(
         "bio",
         "email",
         "is_want_news",
+        "universities_id",
+        "graduation_year",
     ):
         local_attr = locals()[field]
         if field == "email":
             local_attr = local_attr.lower()
         if getattr(user, field) != local_attr:
+            if field in ("universities_id", "graduation_year"):
+                # updating these fields requires account re-validation
+                reset_access_level = True
             logger.info(
                 'Update the "{}" field from {} to {}'.format(
                     field, getattr(user, field), local_attr
                 )
             )
             setattr(user, field, local_attr)
+    if reset_access_level:
+        user.access_level = "asked"
+
     try:
         session.commit()
     except IntegrityError as e:

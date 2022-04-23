@@ -536,6 +536,41 @@ def compute_contributivity(config, config_event, min_improvement):
         leaderboard_module.update_all_user_leaderboards(session, event_name)
 
 
+@main.command()
+@click.option(
+    "--config",
+    default="config.yml",
+    show_default=True,
+    help="Configuration file YAML format containing the database " "information",
+)
+@click.option("--country", default="france", help="Country to include")
+def populate_universities(config, country):
+    """Blend submissions, compute combined score and contributivities."""
+    import json
+    from urllib.request import urlopen
+    import pandas as pd
+    from .model.user import University
+
+    config = read_config(config)
+
+    response = urlopen(
+        f"http://universities.hipolabs.com/search?country={country.lower()}"
+    )
+    json_data = response.read().decode("utf-8")
+    data = json.loads(json_data)
+    df = pd.json_normalize(data, max_level=1, errors="ignore")
+    df = df[["name", "country"]].drop_duplicates("name")
+    click.echo(f"Loaded {df.shape[0]} universities for {country}")
+
+    with session_scope(config["sqlalchemy"]) as session:
+        batch = []
+        for idx, row in df.iterrows():
+            batch.append(University(name=row["name"], country=row["country"]))
+        session.add_all(batch)
+        session.flush()
+    click.echo("Batch insert into the universities table done.")
+
+
 def start():
     main()
 

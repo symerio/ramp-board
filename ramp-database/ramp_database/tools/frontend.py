@@ -1,4 +1,4 @@
-from ramp_database.model import Submission
+from ramp_database.model import Submission, UserTeam
 
 from ._query import select_event_admin_by_instance
 from ._query import select_event_by_name
@@ -121,8 +121,20 @@ def is_accessible_code(session, event_name, user_name, submission_id=None):
         )
     else:
         submission = session.query(Submission).filter_by(id=submission_id).one_or_none()
-    if submission is not None and user == submission.event_team.team.admin:
-        return True
+    if submission is not None:
+        if user == submission.event_team.team.admin:
+            return True
+        if (
+            session.query(UserTeam)
+            .filter_by(
+                team_id=submission.event_team.team.id,
+                user_id=user.id,
+                status="accepted",
+            )
+            .all()
+        ):
+            # User is part of the team that made the submission
+            return True
     return False
 
 

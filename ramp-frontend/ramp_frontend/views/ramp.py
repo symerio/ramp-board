@@ -53,6 +53,7 @@ from ramp_database.tools.submission import get_submission_by_name
 from ramp_database.tools.user import add_user_interaction
 from ramp_database.tools.team import ask_sign_up_team
 from ramp_database.tools.team import get_event_team_by_name
+from ramp_database.tools.team import get_event_team_by_user_name
 from ramp_database.tools.team import sign_up_team
 
 from ramp_frontend import db
@@ -103,7 +104,9 @@ def problems():
                 event.state = "collab"
             if user:
                 signed = get_event_team_by_name(
-                    db.session, event.name, flask_login.current_user.name
+                    db.session,
+                    event.name,
+                    team_name=flask_login.current_user.name,
                 )
                 if not signed:
                     event.state_user = "not_signed"
@@ -292,7 +295,12 @@ def sign_up_for_event(event_name):
             is_error=False,
             category="Request sent",
         )
-    sign_up_team(db.session, event.name, flask_login.current_user.name)
+    sign_up_team(
+        db.session,
+        event.name,
+        team_name=flask_login.current_user.name,
+        user_name=flask_login.current_user.name,
+    )
     return redirect_to_sandbox(
         event,
         "{} is signed up for {}.".format(flask_login.current_user.firstname, event),
@@ -332,7 +340,7 @@ def sandbox(event_name):
         flask_login.current_user.name,
         event.ramp_sandbox_name,
     )
-    event_team = get_event_team_by_name(
+    event_team = get_event_team_by_user_name(
         db.session, event_name, flask_login.current_user.name
     )
     # initialize the form for the code
@@ -547,6 +555,7 @@ def sandbox(event_name):
                     event_team.team.name,
                     new_submission_name,
                     sandbox_submission.path,
+                    user_name=flask_login.current_user.name,
                 )
             except DuplicateSubmissionError:
                 return redirect_to_sandbox(

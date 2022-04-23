@@ -37,9 +37,10 @@ def session_scope_module(database_connection):
 def test_problem_model(session_scope_module):
     problem = get_problem(session_scope_module, "iris")
 
-    assert repr(problem) == (
-        "Problem(iris)\nWorkflow(Estimator)\n\tWorkflow(Estimator): "
-        "WorkflowElement(estimator)"
+    assert repr(
+        problem
+    ) == "Problem({})\nWorkflow(Estimator)\n\tWorkflow(Estimator): " "WorkflowElement(estimator)".format(
+        "iris"
     )
 
     # check that we can access the problem module and that we have one of the

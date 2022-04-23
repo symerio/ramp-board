@@ -11,6 +11,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import sql
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
+from sqlalchemy import sql
 
 from .base import Model
 from .event import EventTeam
@@ -18,6 +19,7 @@ from .event import EventTeam
 __all__ = [
     "User",
     "UserInteraction",
+    "University",
 ]
 
 
@@ -130,7 +132,14 @@ class User(Model):
     bio = Column(String(1024), default=None)
     is_want_news = Column(Boolean, default=True)
     access_level = Column(
-        Enum("admin", "user", "asked", "not_confirmed", name="access_level"),
+        Enum(
+            "admin",
+            "user",
+            "asked",
+            "not_confirmed",
+            "deleted",
+            name="access_level",
+        ),
         default="asked",
     )
     signup_timestamp = Column(DateTime, nullable=False)
@@ -140,6 +149,11 @@ class User(Model):
 
     # Flask-Login fields
     is_authenticated = Column(Boolean, default=False)
+
+    # Custom fields
+    universities_id = Column(Integer, ForeignKey("universities.id"))
+    university = relationship("University")
+    graduation_year = Column(Integer, default=None)
 
     def __init__(
         self,
@@ -158,6 +172,8 @@ class User(Model):
         website_url="",
         bio="",
         is_want_news=True,
+        universities_id=None,
+        graduation_year=None,
     ):
         self.name = name
         self.hashed_password = hashed_password
@@ -175,6 +191,8 @@ class User(Model):
         self.website_url = website_url
         self.bio = bio
         self.is_want_news = is_want_news
+        self.universities_id = universities_id
+        self.graduation_year = graduation_year
 
     @property
     def is_active(self):
@@ -447,3 +465,32 @@ default is None
     def team(self):
         """:class:`ramp_database.model.Team`: The team instance."""
         return self.event_team.team if self.event_team else None
+
+
+class University(Model):
+    """University table.
+
+    This class is used to record the list of valid universities.
+
+    Parameters
+    ----------
+    name : None or str, default is None
+        Name of the university.
+    country : None or str, default is None
+        The country of the university.
+
+    Attributes
+    ----------
+    id : int
+        The ID of the table row.
+    """
+
+    __tablename__ = "universities"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, default=None, unique=True)
+    country = Column(String, default=None)
+
+    def __init__(self, name=None, country=None):
+        self.name = name
+        self.country = country

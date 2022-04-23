@@ -18,6 +18,9 @@ from wtforms import validators
 from wtforms import ValidationError
 from wtforms.widgets import CheckboxInput
 from wtforms.widgets import ListWidget
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
+
+from ramp_database.model import University
 
 
 def _space_check(form, field):
@@ -96,6 +99,17 @@ class UserUpdateProfileForm(FlaskForm):
     github_url = StringField("github_url")
     website_url = StringField("website_url")
     bio = StringField("bio")
+    graduation_year = IntegerField(
+        "firstname",
+        [
+            validators.DataRequired(),
+            validators.NumberRange(min=2010, max=2040),
+        ],
+    )
+    university = QuerySelectField(
+        query_factory=lambda: University.query.all(),
+        get_label=lambda x: f"{x.name} ({x.country})",
+    )
     is_want_news = BooleanField()
 
 
