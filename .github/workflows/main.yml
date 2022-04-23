@@ -1,7 +1,9 @@
 name: main
 
 on:
-  push: ['master']
+  push:
+    branches:
+      - 'master'
   pull_request:
   workflow_dispatch:
     inputs:
