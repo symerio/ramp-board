@@ -1,4 +1,5 @@
 import logging
+import sys
 import os
 import shutil
 from datetime import datetime
@@ -186,6 +187,25 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     shutil.rmtree(output_training_dir)
                 self.status = "collected"
                 return (returncode, error_msg)
+
+            # scoring with the judger for now using a custom scoring function
+            sys.path.append(
+                os.path.join(self.config["data_dir"], "output_validators", "judger")
+            )
+            from data import OutputData
+
+            output_data = OutputData.from_file(
+                os.path.join(output_training_dir, "case0.ans")
+            )
+            # Just some fake score for now
+            score = (
+                output_data.deviceNum
+                + sum(output_data.regionIndexs)
+                + output_data.stepNum
+            )
+            with open(os.path.join(output_training_dir, "score.txt"), "w") as fh:
+                fh.write(str(score))
+
             # copy the predictions into the disk
             # no need to create the directory, it will be handle by copytree
             shutil.copytree(output_training_dir, pred_dir)

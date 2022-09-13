@@ -46,78 +46,20 @@ def _compute_leaderboard(
     """
     record_score = []
     event = session.query(Event).filter_by(name=event_name).one()
-    map_score_precision = {
-        score_type.name: score_type.precision for score_type in event.score_types
-    }
     for sub in submissions:
         # take only max n bag
-        df_scores_bag = get_bagged_scores(session, sub.id)
-        highest_level = df_scores_bag.index.get_level_values("n_bag").max()
-        df_scores_bag = df_scores_bag.loc[(slice(None), highest_level), :]
-        df_scores_bag.index = df_scores_bag.index.droplevel("n_bag")
-        df_scores_bag = df_scores_bag.round(map_score_precision)
-
-        df_scores = get_scores(session, sub.id)
-        df_scores = df_scores.round(map_score_precision)
-
-        df_time = get_time(session, sub.id)
-        df_time = df_time.stack().to_frame()
-        df_time.index = df_time.index.set_names(["fold", "step"])
-        df_time = df_time.rename(columns={0: "time"})
-        df_time = df_time.sum(axis=0, level="step").T
-
-        df_scores_mean = df_scores.groupby("step").mean()
-        df_scores_std = df_scores.groupby("step").std()
-
-        # select only the validation and testing steps and rename them to
-        # public and private
-        map_renaming = {"valid": "public", "test": "private"}
-        df_scores_mean = (
-            df_scores_mean.loc[list(map_renaming.keys())]
-            .rename(index=map_renaming)
-            .stack()
+        df = (
+            get_bagged_scores(session, sub.id)
+            .reset_index(drop=True)
+            .max(axis=0)
             .to_frame()
             .T
         )
-        df_scores_std = (
-            df_scores_std.loc[list(map_renaming.keys())]
-            .rename(index=map_renaming)
-            .stack()
-            .to_frame()
-            .T
-        )
-        df_scores_bag = df_scores_bag.rename(index=map_renaming).stack().to_frame().T
-
-        df = pd.concat(
-            [df_scores_bag, df_scores_mean, df_scores_std],
-            axis=1,
-            keys=["bag", "mean", "std"],
-        )
-
-        df.columns = df.columns.set_names(["stat", "set", "score"])
-
-        # change the multi-index into a stacked index
-        df.columns = df.columns.map(lambda x: " ".join(x))
-
-        # add the aggregated time information
-        df_time.index = df.index
-        df_time = df_time.rename(
-            columns={
-                "train": "train time [s]",
-                "valid": "validation time [s]",
-                "test": "test time [s]",
-            }
-        )
-        df = pd.concat([df, df_time], axis=1)
 
         if leaderboard_type == "private":
             df["submission ID"] = sub.basename.replace("submission_", "")
         df["team"] = sub.team.name
         df["submission"] = sub.name_with_link if with_links else sub.name
-        df["contributivity"] = int(round(100 * sub.contributivity))
-        df["historical contributivity"] = int(
-            round(100 * sub.historical_contributivity)
-        )
         df["max RAM [MB]"] = get_submission_max_ram(session, sub.id)
         df["submitted at (UTC)"] = pd.Timestamp(sub.submission_timestamp)
         record_score.append(df)
@@ -128,52 +70,7 @@ def _compute_leaderboard(
     # keep only second precision for the time stamp
     df["submitted at (UTC)"] = df["submitted at (UTC)"].astype("datetime64[s]")
 
-    # reordered the column
-    stats_order = ["bag", "mean", "std"] if leaderboard_type == "private" else ["bag"]
-    dataset_order = (
-        ["public", "private"] if leaderboard_type == "private" else ["public"]
-    )
-    score_order = [event.official_score_name] + [
-        score_type.name
-        for score_type in event.score_types
-        if score_type.name != event.official_score_name
-    ]
-    score_list = [
-        "{} {} {}".format(stat, dataset, score)
-        for dataset, score, stat in product(dataset_order, score_order, stats_order)
-    ]
-    # Only display train and validation time for the public leaderboard
-    time_list = (
-        ["train time [s]", "validation time [s]", "test time [s]"]
-        if leaderboard_type == "private"
-        else ["train time [s]", "validation time [s]"]
-    )
-    col_ordered = (
-        ["team", "submission"]
-        + score_list
-        + ["contributivity", "historical contributivity"]
-        + time_list
-        + ["max RAM [MB]", "submitted at (UTC)"]
-    )
-    if leaderboard_type == "private":
-        col_ordered = ["submission ID"] + col_ordered
-    df = df[col_ordered]
-
-    # check if the contributivity columns are null
-    contrib_columns = ["contributivity", "historical contributivity"]
-    if (df[contrib_columns] == 0).all(axis=0).all():
-        df = df.drop(columns=contrib_columns)
-
-    df = df.sort_values(
-        "bag {} {}".format(leaderboard_type, event.official_score_name),
-        ascending=event.get_official_score_type(session).is_lower_the_better,
-    )
-
-    # rename the column name for the public leaderboard
-    if leaderboard_type == "public":
-        df = df.rename(
-            columns={key: value for key, value in zip(score_list, score_order)}
-        )
+    df = df.sort_values(by="Total cost")
     return df
 
 
@@ -206,105 +103,9 @@ def _compute_competition_leaderboard(
         session, submissions, "private", event_name, with_links=False
     )
 
-    time_list = (
-        ["train time [s]", "validation time [s]", "test time [s]"]
-        if leaderboard_type == "private"
-        else ["train time [s]", "validation time [s]"]
-    )
-
-    col_selected_private = (
-        ["team", "submission"]
-        + ["bag private " + score_name, "bag public " + score_name]
-        + time_list
-        + ["submitted at (UTC)"]
-    )
-    leaderboard_df = private_leaderboard[col_selected_private]
-    leaderboard_df = leaderboard_df.rename(
-        columns={
-            "bag private " + score_name: "private " + score_name,
-            "bag public " + score_name: "public " + score_name,
-        }
-    )
-
     # select best submission for each team
-    best_df = (
-        leaderboard_df.groupby("team").min()
-        if score_type.is_lower_the_better
-        else leaderboard_df.groupby("team").max()
-    )
-    best_df = best_df[["public " + score_name]].reset_index()
-    best_df["best"] = True
-
-    # merge to get a best indicator column then select best
-    leaderboard_df = pd.merge(
-        leaderboard_df,
-        best_df,
-        how="left",
-        left_on=["team", "public " + score_name],
-        right_on=["team", "public " + score_name],
-    )
-    leaderboard_df = leaderboard_df.fillna(False)
-    leaderboard_df = leaderboard_df[leaderboard_df["best"]]
-    leaderboard_df = leaderboard_df.drop(columns="best")
-
-    # dealing with ties: we need the lowest timestamp
-    best_df = leaderboard_df.groupby("team").min()
-    best_df = best_df[["submitted at (UTC)"]].reset_index()
-    best_df["best"] = True
-    leaderboard_df = pd.merge(
-        leaderboard_df,
-        best_df,
-        how="left",
-        left_on=["team", "submitted at (UTC)"],
-        right_on=["team", "submitted at (UTC)"],
-    )
-    leaderboard_df = leaderboard_df.fillna(False)
-    leaderboard_df = leaderboard_df[leaderboard_df["best"]]
-    leaderboard_df = leaderboard_df.drop(columns="best")
-
-    # sort by public score then by submission timestamp, compute rank
-    leaderboard_df = leaderboard_df.sort_values(
-        by=["public " + score_name, "submitted at (UTC)"],
-        ascending=[score_type.is_lower_the_better, True],
-    )
-    leaderboard_df["public rank"] = np.arange(len(leaderboard_df)) + 1
-
-    # sort by private score then by submission timestamp, compute rank
-    leaderboard_df = leaderboard_df.sort_values(
-        by=["private " + score_name, "submitted at (UTC)"],
-        ascending=[score_type.is_lower_the_better, True],
-    )
-    leaderboard_df["private rank"] = np.arange(len(leaderboard_df)) + 1
-
-    leaderboard_df["move"] = (
-        leaderboard_df["public rank"] - leaderboard_df["private rank"]
-    )
-    leaderboard_df["move"] = [
-        "{:+d}".format(m) if m != 0 else "-" for m in leaderboard_df["move"]
-    ]
-
-    col_selected = (
-        [
-            leaderboard_type + " rank",
-            "team",
-            "submission",
-            leaderboard_type + " " + score_name,
-        ]
-        + time_list
-        + ["submitted at (UTC)"]
-    )
-    if leaderboard_type == "private":
-        col_selected.insert(1, "move")
-
-    df = leaderboard_df[col_selected]
-    df = df.rename(
-        columns={
-            leaderboard_type + " " + score_name: score_name,
-            leaderboard_type + " rank": "rank",
-        }
-    )
-    df = df.sort_values(by="rank")
-    return df
+    best_df = private_leaderboard.groupby("team").min().reset_index()
+    return best_df
 
 
 def get_leaderboard_all_info(session, event_name):
