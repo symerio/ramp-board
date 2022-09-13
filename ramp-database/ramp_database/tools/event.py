@@ -286,11 +286,11 @@ def add_event(
     session.add(event)
     session.commit()
 
-    X_train, y_train = event.problem.get_train_data()
-    cv = event.problem.module.get_cv(X_train, y_train)
-    for train_indices, test_indices in cv:
-        cv_fold = CVFold(event=event, train_is=train_indices, test_is=test_indices)
-        session.add(cv_fold)
+    # X_train, y_train = event.problem.get_train_data()
+    # cv = event.problem.module.get_cv(X_train, y_train)
+    # for train_indices, test_indices in cv:
+    #     cv_fold = CVFold(event=event, train_is=train_indices, test_is=test_indices)
+    #     session.add(cv_fold)
 
     score_types = event.problem.module.score_types
     for score_type in score_types:
