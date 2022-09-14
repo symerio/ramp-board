@@ -1,5 +1,5 @@
-from distutils.version import LooseVersion
 from itertools import product
+from packaging import version
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ from .submission import get_submission_max_ram
 from .submission import get_time
 
 
-width = -1 if LooseVersion(pd.__version__) < LooseVersion("1.0.0") else None
+width = -1 if version.Version(pd.__version__) < version.Version("1.0.0") else None
 pd.set_option("display.max_colwidth", width)
 
 
@@ -224,7 +224,13 @@ def get_leaderboard(
         )
     elif leaderboard_type in ["new", "failed"]:
         if leaderboard_type == "new":
-            columns = ["team", "submission", "submitted at (UTC)", "state"]
+            columns = [
+                "team",
+                "submission",
+                "submitted at (UTC)",
+                "state",
+                "wating list",
+            ]
         else:
             columns = ["team", "submission", "submitted at (UTC)", "error"]
 
@@ -241,8 +247,13 @@ def get_leaderboard(
                         pd.Timestamp(sub.submission_timestamp),
                         (
                             sub.state_with_link
-                            if leaderboard_type == "failed"
+                            if leaderboard_type == "error"
                             else sub.state
+                        ),
+                        (
+                            "#{}".format(sub.queue_position)
+                            if sub.queue_position != -1
+                            else ""
                         ),
                     ],
                 )

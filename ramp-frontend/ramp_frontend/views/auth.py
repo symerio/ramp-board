@@ -7,6 +7,7 @@ import flask_login
 
 from flask import abort
 from flask import Blueprint
+from flask import copy_current_request_context
 from flask import current_app as app
 from flask import flash
 from flask import redirect
@@ -150,6 +151,7 @@ def sign_up():
             logger.info(str(e))
             return redirect(url_for("auth.sign_up"))
         # send an email to the participant such that he can confirm his email
+        send_mail_with_context = copy_current_request_context(send_mail)
         token = ts.dumps(user.email)
         recover_url = url_for("auth.user_confirm_email", token=token, _external=True)
         subject = "Confirm your email for signing-up to RAMP"
@@ -169,7 +171,7 @@ def sign_up():
             f"See you on the RAMP website!\n"
             f"The Huawei - RAMP team"
         )
-        send_mail(user.email, subject, body)
+        send_mail_with_context(user.email, subject, body)
         logger.info("{} has signed-up to RAMP".format(user.name))
         flash(
             "We sent your confirmation email. Please check your emails and click on "
@@ -269,7 +271,8 @@ def reset_password():
             )
             body += recover_url
             body += "\n\nSee you on the RAMP website!"
-            send_mail(user.email, subject, body)
+            send_mail_with_context = copy_current_request_context(send_mail)
+            send_mail_with_context(user.email, subject, body)
             logger.info("Password reset requested for user {}".format(user.name))
             logger.info(recover_url)
             flash("An email to reset your password has been sent")
@@ -306,7 +309,7 @@ def reset_with_token(token):
     if form.validate_on_submit():
         user = User.query.filter_by(email=email).one_or_none()
         if user is None:
-            logger.error("The error was deleted before resetting his/her " "password")
+            logger.error("The error was deleted before resetting his/her password")
             abort(404)
         (
             User.query.filter_by(email=email).update(
@@ -357,6 +360,7 @@ def user_confirm_email(token):
     User.query.filter_by(email=email).update({"access_level": "asked"})
     db.session.commit()
     admin_users = User.query.filter_by(access_level="admin")
+    send_mail_with_context = copy_current_request_context(send_mail)
     for admin in admin_users:
         subject = "Approve registration of {}".format(user.name)
         body = body_formatter_user(user)
@@ -365,7 +369,7 @@ def user_confirm_email(token):
         )
         body += "Click on the link to approve the registration "
         body += "of this user: {}".format(url_approve)
-        send_mail(admin.email, subject, body)
+        send_mail_with_context(admin.email, subject, body)
     flash(
         "Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible."
     )

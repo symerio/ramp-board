@@ -265,7 +265,7 @@ def test_sign_up(client_session):
     _assert_flash(
         "/sign_up",
         data=user_profile,
-        message=("username is already in use " "and email is already in use"),
+        message=("username is already in use and email is already in use"),
     )
 
 
@@ -289,6 +289,8 @@ def test_sign_up_with_approval(client_session):
                 flash_message = dict(cs["_flashes"])
             assert "We sent a confirmation email." in flash_message["message"]
             # check that the email has been sent
+            # shutdown the threadpool and wait for the future (email) to be sent
+            client.application.pool.shutdown(wait=True)
             assert len(outbox) == 1
             assert "Click on the following link to confirm your email" in outbox[0].body
             # get the link to reset the password
@@ -317,6 +319,8 @@ def test_sign_up_with_approval(client_session):
                 in flash_message["message"]
             )
             # check that we send an email to the administrator
+            # shutdown the threadpool and wait for the future (email) to be sent
+            client.application.pool.shutdown(wait=True)
             assert len(outbox) == 1
             assert "Approve registration of new_user_1" in outbox[0].subject
             # ensure that we have the last changes
@@ -432,18 +436,11 @@ def test_reset_password(client_session):
     # set back the account to 'user' access level
     user.access_level = "user"
     session.commit()
-    rv = client.post("/reset_password", data={"email": user.email})
-    with client.session_transaction() as cs:
-        flash_message = dict(cs["_flashes"])
-    assert flash_message["message"] == (
-        "An email to reset your password has " "been sent"
-    )
-    assert rv.status_code == 302
-    assert rv.location == "http://localhost/login"
-
     with client.application.app_context():
         with mail.record_messages() as outbox:
             rv = client.post("/reset_password", data={"email": user.email})
+            # shutdown the threadpool and wait for the future (email) to be sent
+            client.application.pool.shutdown(wait=True)
             assert len(outbox) == 1
             assert "click on the link to reset your password" in outbox[0].body
             # get the link to reset the password
@@ -453,6 +450,13 @@ def test_reset_password(client_session):
             reset_password_link = reset_password_link[
                 reset_password_link.find("/reset") :
             ]
+
+    rv = client.post("/reset_password", data={"email": user.email})
+    with client.session_transaction() as cs:
+        flash_message = dict(cs["_flashes"])
+    assert flash_message["message"] == ("An email to reset your password has been sent")
+    assert rv.status_code == 302
+    assert rv.location == "http://localhost/login"
 
     # check that we can reset the password using the previous link
     # GET method
@@ -485,6 +489,8 @@ def test_reset_token_error(client_session):
     with client.application.app_context():
         with mail.record_messages() as outbox:
             rv = client.post("/reset_password", data={"email": user.email})
+            # shutdown the threadpool and wait for the future (email) to be sent
+            client.application.pool.shutdown(wait=True)
             assert len(outbox) == 1
             assert "click on the link to reset your password" in outbox[0].body
             # get the link to reset the password
