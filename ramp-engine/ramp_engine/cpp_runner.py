@@ -3,6 +3,7 @@ import sys
 import os
 import shutil
 from datetime import datetime
+import time
 import subprocess
 
 from .base import _get_traceback
@@ -11,6 +12,10 @@ from .local import CondaEnvWorker
 
 logger = logging.getLogger("RAMP-WORKER")
 
+
+COMPILATION_ERROR = 1220
+RUNTIME_ERROR = 1221
+SCORING_ERROR = 1222
 
 class CppCondaEnvWorker(CondaEnvWorker):
     """Local worker which uses conda environment to dispatch submission.
@@ -101,6 +106,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
             raise ValueError(
                 "Wait that the submission is processed before to " "launch a new one."
             )
+
         self._log_dir = os.path.join(self.config["logs_dir"], self.submission)
         os.makedirs(self._log_dir, exist_ok=True)
         self._log_file = open(os.path.join(self._log_dir, "log"), "wb+")
@@ -114,29 +120,86 @@ class CppCondaEnvWorker(CondaEnvWorker):
         INCLUDE_DIR = os.path.join(self.config["data_dir"], "include", "cpp")
         DATA_DIR = os.path.join(self.config["data_dir"], "data", "secret")
 
-        subprocess.check_call(
-            [
-                "gcc",
-                os.path.join(submission_dir, "main.cpp"),
-                f"-I{INCLUDE_DIR}",
-                "-lstdc++",
-                "-O3",
-                "-o",
-                bin_path,
-            ],
-        )
+        self.status = "finished"
+        try:
+            subprocess.check_call(
+                [
+                    "gcc",
+                    os.path.join(submission_dir, "main.cpp"),
+                    f"-I{INCLUDE_DIR}",
+                    "-lstdc++",
+                    "-O3",
+                    "-o",
+                    bin_path,
+                ],
+                stderr=self._log_file,
+                stdout=self._log_file,
+            )
+        except subprocess.CalledProcessError as err:
 
-        self._proc = subprocess.Popen(
-            [
-                bin_path,
-            ],
-            stdout=open(os.path.join(output_dir, "case0.ans"), "wb+"),
-            stderr=self._log_file,
-            stdin=open(os.path.join(DATA_DIR, "case0.in"), "rb"),
-        )
+            self._return_code = COMPILATION_ERROR
+            return
 
-        self._start_date = datetime.utcnow()
-        self.status = "running"
+        # Compilation passed, clean up the log
+        shutil.copy(os.path.join(self._log_dir, "log"), os.path.join(self._log_dir, "compilation-log"))
+        self._log_file.truncate(0)
+
+        # Run compiled code in batches
+        batch_size = 4
+        for n_batch in range(3):
+            t0 = time.perf_counter()
+            procs = []
+            for sub_idx in range(batch_size):
+                idx = batch_size*n_batch + sub_idx
+                # We have 9 test cases in total
+                if idx > 9:
+                    continue
+                procs.append(subprocess.Popen(
+                    [bin_path],
+                    stdout=open(os.path.join(output_dir, f"case{idx}.ans"), "wb+"),
+                    stderr=self._log_file,
+                    stdin=open(os.path.join(DATA_DIR, f"case{idx}.in"), "rb"),
+                ))
+            for p in procs:
+                # Time remaining for this batch (evaluated in parallel)
+                dt = max(t0 + self.timeout - time.perf_counter(), 0)
+                if dt == 0:
+                    self.status = "timeout"
+                    self._return_code = 124
+                    return
+                try:
+                    p.communicate(timeout=dt)
+                    self._return_code = max(p.returncode, 0)
+                except subprocess.TimeoutExpired:
+                    self.status = "timeout"
+                    self._return_code = 124
+                    return
+
+            if self._return_code > 0:
+                return
+            
+        # Running the model passed, clean up the log
+        shutil.copy(os.path.join(self._log_dir, "log"), os.path.join(self._log_dir, "run-log"))
+        self._log_file.truncate(0)
+
+        # Score the solution
+        judger_path = os.path.join(self.config["data_dir"], "output_validators", "judger", "__init__.py")
+        try:
+            subprocess.check_call(
+                [
+                 os.path.join(self._python_bin_path, 'python'),
+                 judger_path,
+                 DATA_DIR,
+                 output_dir,
+                 output_dir,
+                ],
+                stderr=self._log_file,
+                stdout=self._log_file,
+            )
+        except subprocess.CalledProcessError as err:
+            self._return_code = SCORING_ERROR
+            return
+        
 
     def collect_results(self):
         """Collect the results after that the submission is completed.
@@ -160,9 +223,6 @@ class CppCondaEnvWorker(CondaEnvWorker):
                 "collect the results."
             )
         if self.status in ["finished", "running", "timeout"]:
-            # communicate() will wait for the process to be completed
-            self._proc.communicate()
-            self._log_file.close()
             with open(os.path.join(self._log_dir, "log"), "rb") as f:
                 log_output = f.read()
             error_msg = _get_traceback(log_output.decode("utf-8"))
@@ -173,7 +233,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
             if self.status == "timeout":
                 returncode = 124
             else:
-                returncode = self._proc.returncode
+                returncode = self._return_code
             pred_dir = os.path.join(self.config["predictions_dir"], self.submission)
             output_training_dir = os.path.join(
                 self.config["submissions_dir"],
@@ -188,26 +248,19 @@ class CppCondaEnvWorker(CondaEnvWorker):
                 self.status = "collected"
                 return (returncode, error_msg)
 
-            # scoring with the judger for now using a custom scoring function
-            sys.path.append(
-                os.path.join(self.config["data_dir"], "output_validators", "judger")
-            )
-            from data import OutputData
-
-            output_data = OutputData.from_file(
-                os.path.join(output_training_dir, "case0.ans")
-            )
             # Just some fake score for now
-            score = (
-                output_data.deviceNum
-                + sum(output_data.regionIndexs)
-                + output_data.stepNum
-            )
-            with open(os.path.join(output_training_dir, "score.txt"), "w") as fh:
-                fh.write(str(score))
 
             # copy the predictions into the disk
             # no need to create the directory, it will be handle by copytree
             shutil.copytree(output_training_dir, pred_dir)
             self.status = "collected"
             return (returncode, error_msg)
+
+    def check_timeout(self):
+        """We use a different timeout mechanism"""
+        return None
+
+    def _is_submission_finished():
+        """The parallelism happens at the level of test cases"""
+        return True
+
