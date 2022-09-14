@@ -13,18 +13,8 @@ on:
 
 jobs:
   main:
-    name: test-py-${{ matrix.python }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-18.04]
-        python: [3.7, 3.8, 3.9]
-        include:
-          - os: ubuntu-18.04
-            python: 3.8
-            # the following has no effect with manual trigger
-            # where the ramp-workflow is specified anyway
-            ramp_workflow_version: master
+    name: test-py-3.10
+    runs-on: ubuntu-latest
 
 
     services:
@@ -47,7 +37,7 @@ jobs:
         with:
           update-conda: true
           activate-conda: false
-          python-version: ${{ matrix.python }}
+          python-version: 3.10
           conda-channels: anaconda
 
       - name: Create envs
@@ -56,12 +46,12 @@ jobs:
           conda env update -n testenv -f environment.yml
           conda env create -f ci_tools/environment_iris_kit.yml
         env:
-          PYTHON_VERSION: ${{ matrix.python }}
+          PYTHON_VERSION: 3.10
 
       - name: Install ramp-board
         run: |
           source activate testenv
-          if [ "$PYTHON_VERSION" == "3.8" ]; then
+          if [ "$PYTHON_VERSION" == "3.10" ]; then
               python -m pip install "dask==2021.4.1" "distributed==2021.4.1"
           fi
           if [ "${{ matrix.ramp_workflow_version }}" == "master" ]; then
@@ -121,13 +111,10 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.10'
 
       - name: Install dependencies
         run: pip install flake8 black==21.8b0
-
-      - name: Run flake8
-        run: flake8 ramp-*
 
       - name: Run black
         run: black --check .
