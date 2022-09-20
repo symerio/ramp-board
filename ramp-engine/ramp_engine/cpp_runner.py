@@ -5,6 +5,7 @@ import shutil
 from datetime import datetime
 import time
 import subprocess
+from pathlib import Path
 
 from .base import _get_traceback
 from .conda import _conda_info_envs, _get_conda_env_path
@@ -18,13 +19,28 @@ RUNTIME_ERROR = 1221
 SCORING_ERROR = 1222
 
 
-def get_conda_cmd(options: list[str], memory="10m") -> list[str]:
-    cmd = ['docker', 'run',  '-it', '--rm',  '-v',
-            "/home/ubuntu/miniforge3/:/home/ubuntu/miniforge3/:ro", "-v",
-            "/etc/passwd:/etc/passwd:ro", "-v", "/etc/group:/etc/group:ro"] + options + [
-          
-            "-m", memory, "ubuntu:kinetic-20220830"]
+def get_conda_cmd(cmd: list[str], options: list[str] = None, memory="10m") -> list[str]:
 
+    if options is None:
+        options = []
+    cmd_full = (
+        [
+            "docker",
+            "run",
+            "-i",
+            "--rm",
+            "-v",
+            "/home/ubuntu/miniforge3/:/home/ubuntu/miniforge3/:ro",
+            "-v",
+            "/etc/passwd:/etc/passwd:ro",
+            "-v",
+            "/etc/group:/etc/group:ro",
+        ]
+        + options
+        + ["-m", memory, "ubuntu:kinetic-20220830"]
+        + cmd
+    )
+    return cmd_full
 
 
 class CppCondaEnvWorker(CondaEnvWorker):
@@ -105,6 +121,18 @@ class CppCondaEnvWorker(CondaEnvWorker):
             shutil.rmtree(output_training_dir)
         super().teardown()
 
+    def is_cpp_submission(self) -> bool:
+        """Return True if submission is C++, False if it's a Python one"""
+
+        submission_dir = Path(self.config["submissions_dir"]) / self.submission
+
+        if (submission_dir / "solution.cpp").exists() and (len(
+            (submission_dir / "solution.cpp").read_text().strip()) > 10
+        ):
+            return True
+        else:
+            return False
+
     def launch_submission(self):
         """Launch the submission.
 
@@ -126,50 +154,97 @@ class CppCondaEnvWorker(CondaEnvWorker):
         )
         output_dir = os.path.join(submission_dir, "training_output")
         os.makedirs(output_dir, exist_ok=True)
-        bin_path = os.path.join(submission_dir, "main")
-        INCLUDE_DIR = os.path.join(self.config["data_dir"], "include", "cpp")
+        INCLUDE_DIR = Path(
+            self.config["data_dir"], "..", "..", "smartfactoryinstruments-starting-kit"
+        )
         DATA_DIR = os.path.join(self.config["data_dir"], "data", "secret")
 
         self.status = "finished"
-        try:
-            subprocess.check_call(
-                [
-                    "gcc",
-                    os.path.join(submission_dir, "main.cpp"),
-                    f"-I{INCLUDE_DIR}",
-                    "-lstdc++",
-                    "-O3",
-                    "-o",
-                    bin_path,
-                ],
-                stderr=self._log_file,
-                stdout=self._log_file,
+
+        is_cpp = self.is_cpp_submission()
+        if is_cpp:
+            bin_path = os.path.join(submission_dir, "main")
+            Path(submission_dir, "solution.py").unlink(missing_ok=True)
+
+            try:
+                subprocess.check_call(
+                    [
+                        "gcc",
+                        os.path.join(submission_dir, "solution.cpp"),
+                        f"-I{INCLUDE_DIR / 'CPP'}",
+                        "-lstdc++",
+                        "-O3",
+                        "-o",
+                        bin_path,
+                    ],
+                    stderr=self._log_file,
+                    stdout=self._log_file,
+                )
+            except subprocess.CalledProcessError as err:
+
+                self._return_code = COMPILATION_ERROR
+                return
+
+            # Compilation passed, clean up the log
+            shutil.copy(
+                os.path.join(self._log_dir, "log"),
+                os.path.join(self._log_dir, "compilation-log"),
             )
-        except subprocess.CalledProcessError as err:
+            self._log_file.truncate(0)
+        else:
+            Path(submission_dir, "solution.cpp").unlink(missing_ok=True)
+            bin_path = os.path.join(submission_dir, "solution.py")
+            shutil.copy(INCLUDE_DIR / "python/data.py", submission_dir)
 
-            self._return_code = COMPILATION_ERROR
-            return
-
-        # Compilation passed, clean up the log
-        shutil.copy(os.path.join(self._log_dir, "log"), os.path.join(self._log_dir, "compilation-log"))
-        self._log_file.truncate(0)
-
-        # Run compiled code in batches
+        # Run solution in batches
         batch_size = 4
         for n_batch in range(3):
             t0 = time.perf_counter()
             procs = []
             for sub_idx in range(batch_size):
-                idx = batch_size*n_batch + sub_idx
+                idx = batch_size * n_batch + sub_idx
                 # We have 9 test cases in total
                 if idx > 9:
                     continue
-                procs.append(subprocess.Popen(
-                    [bin_path],
-                    stdout=open(os.path.join(output_dir, f"case{idx}.ans"), "wb+"),
-                    stderr=self._log_file,
-                    stdin=open(os.path.join(DATA_DIR, f"case{idx}.in"), "rb"),
-                ))
+                if is_cpp:
+                    p = subprocess.Popen(
+                        get_conda_cmd(
+                            [str(bin_path)],
+                            options=["-v", f"{submission_dir}:{submission_dir}:ro"],
+                        ),
+                        stdout=open(os.path.join(output_dir, f"case{idx}.ans"), "wb+"),
+                        stderr=self._log_file,
+                        stdin=open(os.path.join(DATA_DIR, f"case{idx}.in"), "rb"),
+                    )
+                else:
+                    python_runner = (
+                        Path(self.config["data_dir"])
+                        / "../scripts/ramp_python_runner.py"
+                    ).resolve()
+                    p = subprocess.Popen(
+                        get_conda_cmd(
+                            [
+                                os.path.join(self._python_bin_path, "python"),
+                                str(python_runner),
+                                str(bin_path),
+                                os.path.join(DATA_DIR, f"case{idx}.in"),
+                                os.path.join(output_dir, f"case{idx}.ans"),
+                            ],
+                            options=[
+                                "-v",
+                                f"{submission_dir}:{submission_dir}:ro",
+                                "-v",
+                                f"{python_runner.parent}:{python_runner.parent}:ro",
+                                "-v",
+                                f"{DATA_DIR}:{DATA_DIR}:ro",
+                                "-v",
+                                f"{output_dir}:{output_dir}",
+                            ],
+                        ),
+                        stderr=self._log_file,
+                    )
+
+                procs.append(p)
             for p in procs:
                 # Time remaining for this batch (evaluated in parallel)
                 dt = max(t0 + self.timeout - time.perf_counter(), 0)
@@ -187,21 +262,25 @@ class CppCondaEnvWorker(CondaEnvWorker):
 
             if self._return_code > 0:
                 return
-            
+
         # Running the model passed, clean up the log
-        shutil.copy(os.path.join(self._log_dir, "log"), os.path.join(self._log_dir, "run-log"))
+        shutil.copy(
+            os.path.join(self._log_dir, "log"), os.path.join(self._log_dir, "run-log")
+        )
         self._log_file.truncate(0)
 
         # Score the solution
-        judger_path = os.path.join(self.config["data_dir"], "output_validators", "judger", "__init__.py")
+        judger_path = os.path.join(
+            self.config["data_dir"], "output_validators", "judger", "__init__.py"
+        )
         try:
             subprocess.check_call(
                 [
-                 os.path.join(self._python_bin_path, 'python'),
-                 judger_path,
-                 DATA_DIR,
-                 output_dir,
-                 output_dir,
+                    os.path.join(self._python_bin_path, "python"),
+                    judger_path,
+                    DATA_DIR,
+                    output_dir,
+                    output_dir,
                 ],
                 stderr=self._log_file,
                 stdout=self._log_file,
@@ -209,7 +288,6 @@ class CppCondaEnvWorker(CondaEnvWorker):
         except subprocess.CalledProcessError as err:
             self._return_code = SCORING_ERROR
             return
-        
 
     def collect_results(self):
         """Collect the results after that the submission is completed.
@@ -273,4 +351,3 @@ class CppCondaEnvWorker(CondaEnvWorker):
     def _is_submission_finished():
         """The parallelism happens at the level of test cases"""
         return True
-
