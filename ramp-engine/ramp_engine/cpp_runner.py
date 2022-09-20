@@ -19,7 +19,7 @@ RUNTIME_ERROR = 1221
 SCORING_ERROR = 1222
 
 
-def get_conda_cmd(cmd: list[str], options: list[str] = None, memory="10m") -> list[str]:
+def get_conda_cmd(cmd: list[str], options: list[str] = None, memory="512m") -> list[str]:
 
     if options is None:
         options = []

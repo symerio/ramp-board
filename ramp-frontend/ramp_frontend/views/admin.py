@@ -83,7 +83,7 @@ def approve_users():
                     f"Dear {user.firstname},\n\n"
                     f"Your xianti.fr account has been approved. You will now be able to sign-up for any RAMP Data Challenge, subject to eligibility, once it is open.\n\n"
                     f"Also please join the Huawei RAMP Slack\n"
-                    f"(https://join.slack.com/t/huaweiramp/shared_invite/zt-qbf4vy9s-0NS4~V898h40x8cI2KHEfQ)\n"
+                    f"(https://join.slack.com/t/layoutsmartfactory/shared_invite/zt-1ge14ywqa-yVCSyQSxAO~f~6A0G0_HtA)\n"
                     f"where all event related announcements will be made. For example, if you encounter any difficulties with the process or the platform, you can also ask questions there.\n\n"
                     f"Best regards,\n"
                     f"The Huawei - RAMP team"
