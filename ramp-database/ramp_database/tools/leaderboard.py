@@ -60,7 +60,6 @@ def _compute_leaderboard(
             df["submission ID"] = sub.basename.replace("submission_", "")
         df["team"] = sub.team.name
         df["submission"] = sub.name_with_link if with_links else sub.name
-        df["max RAM [MB]"] = get_submission_max_ram(session, sub.id)
         df["submitted at (UTC)"] = pd.Timestamp(sub.submission_timestamp)
         record_score.append(df)
 
@@ -69,6 +68,7 @@ def _compute_leaderboard(
 
     # keep only second precision for the time stamp
     df["submitted at (UTC)"] = df["submitted at (UTC)"].astype("datetime64[s]")
+    df.columns.name = None
 
     df = df.sort_values(by="Total cost")
     return df
@@ -105,6 +105,7 @@ def _compute_competition_leaderboard(
 
     # select best submission for each team
     best_df = private_leaderboard.groupby("team").min().reset_index()
+    best_df.insert(0, 'rank', np.arange(1, best_df.shape[0]+1, dtype=np.int))
     return best_df
 
 

@@ -17,6 +17,16 @@ COMPILATION_ERROR = 1220
 RUNTIME_ERROR = 1221
 SCORING_ERROR = 1222
 
+
+def get_conda_cmd(options: list[str], memory="10m") -> list[str]:
+    cmd = ['docker', 'run',  '-it', '--rm',  '-v',
+            "/home/ubuntu/miniforge3/:/home/ubuntu/miniforge3/:ro", "-v",
+            "/etc/passwd:/etc/passwd:ro", "-v", "/etc/group:/etc/group:ro"] + options + [
+          
+            "-m", memory, "ubuntu:kinetic-20220830"]
+
+
+
 class CppCondaEnvWorker(CondaEnvWorker):
     """Local worker which uses conda environment to dispatch submission.
 
