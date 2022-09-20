@@ -29,6 +29,8 @@ def get_conda_cmd(cmd: list[str], options: list[str] = None, memory="10m") -> li
             "run",
             "-i",
             "--rm",
+            "--network",
+            "none",
             "-v",
             "/home/ubuntu/miniforge3/:/home/ubuntu/miniforge3/:ro",
             "-v",
@@ -126,8 +128,8 @@ class CppCondaEnvWorker(CondaEnvWorker):
 
         submission_dir = Path(self.config["submissions_dir"]) / self.submission
 
-        if (submission_dir / "solution.cpp").exists() and (len(
-            (submission_dir / "solution.cpp").read_text().strip()) > 10
+        if (submission_dir / "main.cpp").exists() and (
+            len((submission_dir / "main.cpp").read_text().strip()) > 10
         ):
             return True
         else:
@@ -164,16 +166,16 @@ class CppCondaEnvWorker(CondaEnvWorker):
         is_cpp = self.is_cpp_submission()
         if is_cpp:
             bin_path = os.path.join(submission_dir, "main")
-            Path(submission_dir, "solution.py").unlink(missing_ok=True)
 
             try:
                 subprocess.check_call(
                     [
                         "gcc",
-                        os.path.join(submission_dir, "solution.cpp"),
+                        os.path.join(submission_dir, "main.cpp"),
                         f"-I{INCLUDE_DIR / 'CPP'}",
                         "-lstdc++",
                         "-O3",
+                        "-w",
                         "-o",
                         bin_path,
                     ],
@@ -192,7 +194,6 @@ class CppCondaEnvWorker(CondaEnvWorker):
             )
             self._log_file.truncate(0)
         else:
-            Path(submission_dir, "solution.cpp").unlink(missing_ok=True)
             bin_path = os.path.join(submission_dir, "solution.py")
             shutil.copy(INCLUDE_DIR / "python/data.py", submission_dir)
 
@@ -260,8 +261,9 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     self._return_code = 124
                     return
 
-            if self._return_code > 0:
-                return
+
+        if self._return_code > 0:
+            return
 
         # Running the model passed, clean up the log
         shutil.copy(
