@@ -106,4 +106,8 @@ def check_password(password, hashed_password):
     is_same_password : bool
         Return True if the two passwords are identical.
     """
-    return bcrypt.checkpw(_encode_string(password), _encode_string(hashed_password))
+    try:
+        return bcrypt.checkpw(_encode_string(password), _encode_string(hashed_password))
+    except ValueError:
+        # Some manually created password don't have an invalid salt, ignore it.
+        return False
