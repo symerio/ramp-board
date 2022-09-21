@@ -115,7 +115,7 @@ def approve_users():
                     f"You can now proceed to your sandbox for this event and make "
                     f"submissions.\n\n"
                     f"Please note that by signing up to this event, you accept the Challenge Rules "
-                    f"(https://xianti.fr/june-2021-challenge#rules).\n\n"
+                    f".\n\n"
                     f"See you on the RAMP website!\n"
                     f"The Huawei - RAMP team"
                 )
