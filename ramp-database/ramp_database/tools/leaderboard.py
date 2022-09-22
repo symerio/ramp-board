@@ -70,7 +70,7 @@ def _compute_leaderboard(
     df["submitted at (UTC)"] = df["submitted at (UTC)"].astype("datetime64[s]")
     df.columns.name = None
 
-    df = df.sort_values(by="Total cost")
+    df = df.sort_values(by="submitted at (UTC)", ascending=False)
     return df
 
 
@@ -105,7 +105,9 @@ def _compute_competition_leaderboard(
 
     # select best submission for each team
     best_df = private_leaderboard.groupby("team").min().reset_index()
+    best_df = best_df.sort_values(by="Total cost")
     best_df.insert(0, 'rank', np.arange(1, best_df.shape[0]+1, dtype=np.int))
+
     return best_df
 
 

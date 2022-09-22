@@ -162,7 +162,7 @@ def sign_up():
             f"   {recover_url} \n\n"
             f"Please note that your signup request will be approved "
             f"after you send your proof of student status and expected "
-            f"date of graduation to Jiao Li (li.jiao@huawei.com). \n\n"
+            f"date of graduation to (contact@xianti.fr). \n\n"
             f"Please also note that by signing up, you accept the Terms of "
             f"Use [1], the Privacy Notice [2], and the Cookies Policy [3].\n\n"
             f" [1] https://xianti.fr/terms-of-usage \n"
@@ -353,7 +353,7 @@ def user_confirm_email(token):
         return redirect(url_for("auth.login"))
     elif user.access_level == "asked":
         flash(
-            "Your email address has already been confirmed. Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible.",
+            "Your email address has already been confirmed. Please send your proof of student status to contact@xianti.fr if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible.",
             category="error",
         )
         return redirect(url_for("general.index"))
@@ -371,6 +371,6 @@ def user_confirm_email(token):
         body += "of this user: {}".format(url_approve)
         send_mail_with_context(admin.email, subject, body)
     flash(
-        "Please send your proof of student status to Jiao Li <li.jiao@huawei.com> if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible."
+        "Please send your proof of student status to contact@xianti.fr if you haven't yet done so. If you have, we will approve your sign-up request as soon as possible."
     )
     return redirect(url_for("auth.login"))
