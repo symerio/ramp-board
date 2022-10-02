@@ -163,6 +163,8 @@ class CppCondaEnvWorker(CondaEnvWorker):
 
         self.status = "finished"
 
+        self._return_code = 0
+
         is_cpp = self.is_cpp_submission()
         if is_cpp:
             bin_path = os.path.join(submission_dir, "main")
@@ -210,7 +212,8 @@ class CppCondaEnvWorker(CondaEnvWorker):
                 if is_cpp:
                     p = subprocess.Popen(
                         get_conda_cmd(
-                            [str(bin_path)],
+                            # Make sure the process is killed as we cannot kill it from outside
+                            ["timeout", "22", str(bin_path)],
                             options=["-v", f"{submission_dir}:{submission_dir}:ro"],
                         ),
                         stdout=open(os.path.join(output_dir, f"case{idx}.ans"), "wb+"),
@@ -225,6 +228,9 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     p = subprocess.Popen(
                         get_conda_cmd(
                             [
+                                # Make sure the process is killed as we cannot kill it from outside
+                                "timeout",
+                                "22",
                                 os.path.join(self._python_bin_path, "python"),
                                 str(python_runner),
                                 str(bin_path),
@@ -255,8 +261,10 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     return
                 try:
                     p.communicate(timeout=dt)
-                    self._return_code = max(p.returncode, 0)
+                    self._return_code = max(p.returncode, self._return_code)
                 except subprocess.TimeoutExpired:
+                    for p in procs:
+                        p.kill()
                     self.status = "timeout"
                     self._return_code = 124
                     return
@@ -330,18 +338,13 @@ class CppCondaEnvWorker(CondaEnvWorker):
                 self.submission,
                 "training_output",
             )
-            if os.path.exists(pred_dir):
-                shutil.rmtree(pred_dir)
             if returncode:
-                if os.path.exists(output_training_dir):
-                    shutil.rmtree(output_training_dir)
-                self.status = "collected"
-                return (returncode, error_msg)
-
-            # Just some fake score for now
+                if returncode == 139:
+                    error_msg = "Segmentation fault (core dumped)"
 
             # copy the predictions into the disk
-            # no need to create the directory, it will be handle by copytree
+            # no need to create the directory, it will be handled by copytree
+            shutil.rmtree(pred_dir, ignore_errors=True)
             shutil.copytree(output_training_dir, pred_dir)
             self.status = "collected"
             return (returncode, error_msg)
