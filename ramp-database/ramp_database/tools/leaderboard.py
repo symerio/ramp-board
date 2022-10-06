@@ -103,8 +103,14 @@ def _compute_competition_leaderboard(
         session, submissions, "private", event_name, with_links=False
     )
 
+    def _select_best_submission(df):
+        df = df.sort_values('Total cost')
+        # Take lowest score
+        del df['team']
+        return df.iloc[0]
+
     # select best submission for each team
-    best_df = private_leaderboard.groupby("team").min().reset_index()
+    best_df = private_leaderboard.groupby("team").apply(_select_best_submission).reset_index()
     best_df = best_df.sort_values(by="Total cost")
     best_df.insert(0, 'rank', np.arange(1, best_df.shape[0]+1, dtype=np.int))
 
