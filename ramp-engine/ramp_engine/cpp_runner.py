@@ -156,10 +156,8 @@ class CppCondaEnvWorker(CondaEnvWorker):
         )
         output_dir = os.path.join(submission_dir, "training_output")
         os.makedirs(output_dir, exist_ok=True)
-        INCLUDE_DIR = Path(
-            self.config["data_dir"], "..", "..", "smartfactoryinstruments-starting-kit"
-        )
-        DATA_DIR = os.path.join(self.config["data_dir"], "data", "secret")
+        INCLUDE_DIR = Path(self.config["data_dir"]).resolve()
+        DATA_DIR = os.path.join(self.config["data_dir"], "Judger")
 
         self.status = "finished"
 
@@ -174,7 +172,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     [
                         "gcc",
                         os.path.join(submission_dir, "main.cpp"),
-                        f"-I{INCLUDE_DIR / 'CPP'}",
+                        f"-I{INCLUDE_DIR / 'include' / 'cpp'}",
                         "-lstdc++",
                         "-O3",
                         "-w",
@@ -197,17 +195,20 @@ class CppCondaEnvWorker(CondaEnvWorker):
             self._log_file.truncate(0)
         else:
             bin_path = os.path.join(submission_dir, "solution.py")
-            shutil.copy(INCLUDE_DIR / "python/data.py", submission_dir)
+            shutil.copy(INCLUDE_DIR / "Judger/_data.py", Path(submission_dir) / 'data.py')
+            shutil.copy(INCLUDE_DIR / "Judger/config.py", submission_dir)
+            shutil.copy(INCLUDE_DIR / "Judger/reader.py", submission_dir)
 
         # Run solution in batches
-        batch_size = 4
-        for n_batch in range(3):
+        batch_size = 5
+        (Path(output_dir) / "output").mkdir(exist_ok=True)
+        for n_batch in range(4):
             t0 = time.perf_counter()
             procs = []
             for sub_idx in range(batch_size):
                 idx = batch_size * n_batch + sub_idx
                 # We have 9 test cases in total
-                if idx > 9:
+                if idx > 19:
                     continue
                 if is_cpp:
                     p = subprocess.Popen(
@@ -216,14 +217,14 @@ class CppCondaEnvWorker(CondaEnvWorker):
                             ["timeout", "22", str(bin_path)],
                             options=["-v", f"{submission_dir}:{submission_dir}:ro"],
                         ),
-                        stdout=open(os.path.join(output_dir, f"case{idx}.ans"), "wb+"),
+                        stdout=open(os.path.join(output_dir, f"output/case{idx}.out"), "wb+"),
                         stderr=self._log_file,
-                        stdin=open(os.path.join(DATA_DIR, f"case{idx}.in"), "rb"),
+                        stdin=open(os.path.join(DATA_DIR, f"input/case{idx}.in"), "rb"),
                     )
                 else:
                     python_runner = (
                         Path(self.config["data_dir"])
-                        / "../scripts/ramp_python_runner.py"
+                        / "scripts/ramp_python_runner.py"
                     ).resolve()
                     p = subprocess.Popen(
                         get_conda_cmd(
@@ -234,8 +235,8 @@ class CppCondaEnvWorker(CondaEnvWorker):
                                 os.path.join(self._python_bin_path, "python"),
                                 str(python_runner),
                                 str(bin_path),
-                                os.path.join(DATA_DIR, f"case{idx}.in"),
-                                os.path.join(output_dir, f"case{idx}.ans"),
+                                os.path.join(DATA_DIR, f"input/case{idx}.in"),
+                                os.path.join(output_dir, f"output/case{idx}.out"),
                             ],
                             options=[
                                 "-v",
@@ -281,15 +282,15 @@ class CppCondaEnvWorker(CondaEnvWorker):
 
         # Score the solution
         judger_path = os.path.join(
-            self.config["data_dir"], "output_validators", "judger", "__init__.py"
+            self.config["data_dir"], "Judger/judge_ramp.py"
         )
         try:
             subprocess.check_call(
                 [
                     os.path.join(self._python_bin_path, "python"),
                     judger_path,
-                    DATA_DIR,
-                    output_dir,
+                    os.path.join(DATA_DIR,  "input"),
+                    os.path.join(output_dir, "output"),
                     output_dir,
                 ],
                 stderr=self._log_file,
