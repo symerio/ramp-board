@@ -52,12 +52,16 @@ messages = get_flashed_messages(with_categories=true) %} {% if messages %}
               <a href="{{ url_for('ramp.notebook', problem_name=event.problem.name) }}"
                 target="iframe_content">Description</a>
             </li>
+	    <!--
             <li>
               <a href="{{ url_for('ramp.download_starting_kit', event_name=event.name) }}">Download kit</a>
             </li>
+	    -->
+	    <!--
             <li>
               <a href="{{ url_for('ramp.rules', event_name=event.name) }}" target="iframe_content">Rules</a>
             </li>
+	    -->
           </ul>
           <ul class="nav navbar-nav navbar-right">
             {% if approved %}
@@ -80,8 +84,11 @@ messages = get_flashed_messages(with_categories=true) %} {% if messages %}
       </nav>
 
       <div class="iframe-container">
+	     Please refer to the PDF for the round 2 problem description.
+	<!--
         <iframe src="{{ url_for('ramp.notebook', problem_name=event.problem.name) }}" name="iframe_content" ,
           scrolling="no" , onload="AdjustIframeHeightOnLoad()"></iframe>
+	-->
       </div>
     </div>
   </div>
