@@ -128,8 +128,8 @@ class CppCondaEnvWorker(CondaEnvWorker):
 
         submission_dir = Path(self.config["submissions_dir"]) / self.submission
 
-        if (submission_dir / "main.cpp").exists() and (
-            len((submission_dir / "main.cpp").read_text().strip()) > 10
+        if (submission_dir / "solution.cpp").exists() and (
+            len((submission_dir / "solution.cpp").read_text().strip()) > 10
         ):
             return True
         else:
@@ -157,7 +157,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
         output_dir = os.path.join(submission_dir, "training_output")
         os.makedirs(output_dir, exist_ok=True)
         INCLUDE_DIR = Path(self.config["data_dir"]).resolve()
-        DATA_DIR = os.path.join(self.config["data_dir"], "Judger")
+        DATA_DIR = Path(self.config["data_dir"]).resolve()
 
         self.status = "finished"
 
@@ -171,8 +171,8 @@ class CppCondaEnvWorker(CondaEnvWorker):
                 subprocess.check_call(
                     [
                         "gcc",
-                        os.path.join(submission_dir, "main.cpp"),
-                        f"-I{INCLUDE_DIR / 'include' / 'cpp'}",
+                        os.path.join(submission_dir, "solution.cpp"),
+                        #f"-I{INCLUDE_DIR / 'include' / 'cpp'}",
                         "-lstdc++",
                         "-O3",
                         "-w",
@@ -208,7 +208,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
             for sub_idx in range(batch_size):
                 idx = batch_size * n_batch + sub_idx
                 # We have 9 test cases in total
-                if idx > 19:
+                if idx > 9:
                     continue
                 if is_cpp:
                     p = subprocess.Popen(
