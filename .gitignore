@@ -28,3 +28,4 @@ db_engine.yml
 prof
 dask-worker-space/
 coverage.xml
+*.swp

@@ -19,10 +19,14 @@ RUNTIME_ERROR = 1221
 SCORING_ERROR = 1222
 
 
-def get_conda_cmd(cmd: list[str], options: list[str] = None, memory="512m") -> list[str]:
+def get_conda_cmd(cmd: list[str], options: list[str] = None, memory="512m", with_java: bool=True) -> list[str]:
 
     if options is None:
         options = []
+    if with_java:
+        image = "tomcat:10-jdk11"
+    else:
+        image = "ubuntu:kinetic-20220830"
     cmd_full = (
         [
             "docker",
@@ -39,7 +43,7 @@ def get_conda_cmd(cmd: list[str], options: list[str] = None, memory="512m") -> l
             "/etc/group:/etc/group:ro",
         ]
         + options
-        + ["-m", memory, "ubuntu:kinetic-20220830"]
+        + ["-m", memory, image]
         + cmd
     )
     return cmd_full
@@ -186,18 +190,29 @@ class CppCondaEnvWorker(CondaEnvWorker):
 
                 self._return_code = COMPILATION_ERROR
                 return
-
-            # Compilation passed, clean up the log
-            shutil.copy(
-                os.path.join(self._log_dir, "log"),
-                os.path.join(self._log_dir, "compilation-log"),
-            )
-            self._log_file.truncate(0)
         else:
-            bin_path = os.path.join(submission_dir, "solution.py")
-            shutil.copy(INCLUDE_DIR / "Judger/_data.py", Path(submission_dir) / 'data.py')
-            shutil.copy(INCLUDE_DIR / "Judger/config.py", submission_dir)
-            shutil.copy(INCLUDE_DIR / "Judger/reader.py", submission_dir)
+            bin_path = os.path.join(submission_dir, "main")
+
+            try:
+                subprocess.check_call(
+                    [
+                        "javac",
+                        os.path.join(submission_dir, "Main.java"),
+                    ],
+                    stderr=self._log_file,
+                    stdout=self._log_file,
+                )
+            except subprocess.CalledProcessError as err:
+
+                self._return_code = COMPILATION_ERROR
+                return
+
+        # Compilation passed, clean up the log
+        shutil.copy(
+            os.path.join(self._log_dir, "log"),
+            os.path.join(self._log_dir, "compilation-log"),
+        )
+        self._log_file.truncate(0)
 
         # Run solution in batches
         batch_size = 5
@@ -222,34 +237,15 @@ class CppCondaEnvWorker(CondaEnvWorker):
                         stdin=open(os.path.join(DATA_DIR, f"input/case{idx}.in"), "rb"),
                     )
                 else:
-                    python_runner = (
-                        Path(self.config["data_dir"])
-                        / "scripts/ramp_python_runner.py"
-                    ).resolve()
                     p = subprocess.Popen(
                         get_conda_cmd(
-                            [
-                                # Make sure the process is killed as we cannot kill it from outside
-                                "timeout",
-                                "22",
-                                os.path.join(self._python_bin_path, "python"),
-                                str(python_runner),
-                                str(bin_path),
-                                os.path.join(DATA_DIR, f"input/case{idx}.in"),
-                                os.path.join(output_dir, f"output/case{idx}.out"),
-                            ],
-                            options=[
-                                "-v",
-                                f"{submission_dir}:{submission_dir}:ro",
-                                "-v",
-                                f"{python_runner.parent}:{python_runner.parent}:ro",
-                                "-v",
-                                f"{DATA_DIR}:{DATA_DIR}:ro",
-                                "-v",
-                                f"{output_dir}:{output_dir}",
-                            ],
+                            # Make sure the process is killed as we cannot kill it from outside
+                            ["timeout", "22", "java", "Main"],
+                            options=["-v", f"{submission_dir}:{submission_dir}:ro", "-w", f"{submission_dir}"],
                         ),
+                        stdout=open(os.path.join(output_dir, f"output/case{idx}.out"), "wb+"),
                         stderr=self._log_file,
+                        stdin=open(os.path.join(DATA_DIR, f"input/case{idx}.in"), "rb"),
                     )
 
                 procs.append(p)
@@ -282,7 +278,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
 
         # Score the solution
         judger_path = os.path.join(
-            self.config["data_dir"], "Judger/judge_ramp.py"
+            self.config["data_dir"], "validation/judge_ramp.py"
         )
         try:
             subprocess.check_call(

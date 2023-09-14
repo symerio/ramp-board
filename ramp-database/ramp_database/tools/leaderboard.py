@@ -112,7 +112,7 @@ def _compute_competition_leaderboard(
     # select best submission for each team
     best_df = private_leaderboard.groupby("team").apply(_select_best_submission).reset_index()
     best_df = best_df.sort_values(by="Total cost")
-    best_df.insert(0, 'rank', np.arange(1, best_df.shape[0]+1, dtype=np.int))
+    best_df.insert(0, 'rank', np.arange(1, best_df.shape[0]+1, dtype=np.int32))
 
     return best_df
 
