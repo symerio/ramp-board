@@ -8,6 +8,7 @@ import pytest
 from ramp_engine.local import CondaEnvWorker
 from ramp_engine.remote import DaskWorker
 from ramp_engine.conda import _conda_info_envs
+from ramp
 
 ALL_WORKERS = [CondaEnvWorker, DaskWorker]
 

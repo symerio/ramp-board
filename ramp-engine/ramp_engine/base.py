@@ -2,6 +2,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 import subprocess
+import re
 
 logger = logging.getLogger("RAMP-WORKER")
 
@@ -191,4 +192,14 @@ def _get_traceback(content):
     cut_exception_text = content.find("Traceback")
     if cut_exception_text > 0:
         content = content[cut_exception_text:]
+    else:
+        content = content[-3000:]
+    # strip paths
+    content = re.sub("/[^\s]+/", '', content)
+    if content:
+        # Take only the last 2 lines
+        content = "\n".join(content.splitlines()[-3:])
+        # If data is suspiciosly long truncate it
+        if len(content) > 150:
+            content = content[-150:]
     return content

@@ -43,7 +43,7 @@ def color_gradient(rgb, factor_array):
     colors = rgb2gray(colors)
     colors = gray2rgb(
         255 - np.array([color * factor for color, factor in zip(colors, factor_array)])
-    )[:, :, 0]
+    )[:, 0]
     return colors
 
 

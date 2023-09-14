@@ -446,6 +446,7 @@ def get_time(session, submission_id):
         results["fold"].append(fold_id)
         for step in ("train", "valid", "test"):
             results[step].append(getattr(cv_fold, "{}_time".format(step)))
+    breakpoint()
     return pd.DataFrame(results).set_index("fold")
 
 
@@ -717,21 +718,13 @@ def set_bagged_scores(session, submission_id, path_predictions):
         The path where the results files are located.
     """
     submission = select_submission_by_id(session, submission_id)
-    df = pd.read_csv(
-        os.path.join(path_predictions, "bagged_scores.csv"), index_col=[0, 1]
-    )
-    df_steps = df.index.get_level_values("step").unique().tolist()
+    with open(os.path.join(path_predictions, "score.txt")) as fh:
+        cost_value = float(fh.read().strip())
+
     for score in submission.scores:
         for step in ("valid", "test"):
-            highest_n_bag = df.index.get_level_values("n_bag").max()
-            if step in df_steps:
-                score_last_bag = float(df.loc[(step, highest_n_bag), score.score_name])
-                score_all_bags = df.loc[(step, slice(None)), score.score_name].tolist()
-            else:
-                score_last_bag = float(score.event_score_type.worst)
-                score_all_bags = None
-            setattr(score, "{}_score_cv_bag".format(step), score_last_bag)
-            setattr(score, "{}_score_cv_bags".format(step), score_all_bags)
+            setattr(score, "{}_score_cv_bag".format(step), cost_value)
+            setattr(score, "{}_score_cv_bags".format(step), [cost_value])
     session.commit()
 
 
