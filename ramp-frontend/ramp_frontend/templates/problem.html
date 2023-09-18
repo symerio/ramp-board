@@ -32,7 +32,9 @@
                 <font color=darkblue>{{ event.n_submissions }}</font>
               </strong> submissions,
               <!-- combined score = <strong><font color=firebrick>{{ event.combined_combined_valid_score_str }}</font></strong><br /> -->
+	      <!--
               <a href="/event_plots/{{ event.name }}">Plot score vs time</a>
+	      -->
               {% endif %}
               {% endfor %}
           </ul>
@@ -48,9 +50,6 @@
           <a class="btn btn-warning"
             href="{{ url_for('ramp.download_starting_kit', event_name=latest_event) }}">Download</a>
         </div>
-      </div>
-      <div class="iframe-container">
-        <iframe onload="resizeIframe(this)" src="{{ url_for('ramp.notebook', problem_name=problem.name) }}"></iframe>
       </div>
     </div>
   </div>

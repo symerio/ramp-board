@@ -229,7 +229,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     p = subprocess.Popen(
                         get_conda_cmd(
                             # Make sure the process is killed as we cannot kill it from outside
-                            ["timeout", "22", str(bin_path)],
+                            ["timeout", "120", str(bin_path)],
                             options=["-v", f"{submission_dir}:{submission_dir}:ro"],
                         ),
                         stdout=open(os.path.join(output_dir, f"output/case{idx}.out"), "wb+"),
@@ -240,7 +240,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     p = subprocess.Popen(
                         get_conda_cmd(
                             # Make sure the process is killed as we cannot kill it from outside
-                            ["timeout", "22", "java", "Main"],
+                            ["timeout", "120", "java", "Main"],
                             options=["-v", f"{submission_dir}:{submission_dir}:ro", "-w", f"{submission_dir}"],
                         ),
                         stdout=open(os.path.join(output_dir, f"output/case{idx}.out"), "wb+"),

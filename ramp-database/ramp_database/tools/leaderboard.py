@@ -286,6 +286,8 @@ def get_leaderboard(
     df_html = "<thead> {} </tbody>".format(
         df_html.split("<thead>")[1].split("</tbody>")[0]
     )
+    if leaderboard_type == "failed":
+        df_html = df_html.replace('training_error', 'run_error')
     return df_html
 
 

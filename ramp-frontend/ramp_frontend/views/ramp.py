@@ -179,8 +179,8 @@ def problem(problem_name):
 def download_starting_kit(event_name):
     event = db.session.query(Event).filter_by(name=event_name).one()
     return send_from_directory(
-        os.path.join(event.problem.path_ramp_kit, "events_archived"),
-        event_name + ".zip",
+        event.problem.path_ramp_kit,
+        "Optical Network Expansion by Adding Fibers Challenge.pdf"
     )
 
 
