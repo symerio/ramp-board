@@ -14,6 +14,7 @@ from .local import CondaEnvWorker
 logger = logging.getLogger("RAMP-WORKER")
 
 
+EMPTY_SUBMISSION = 1223
 COMPILATION_ERROR = 1220
 RUNTIME_ERROR = 1221
 SCORING_ERROR = 1222
@@ -139,6 +140,19 @@ class CppCondaEnvWorker(CondaEnvWorker):
         else:
             return False
 
+    def is_empty_submission(self):
+        submission_dir = Path(self.config["submissions_dir"]) / self.submission
+
+        if (submission_dir / "solution.cpp").exists() and (
+            len((submission_dir / "solution.cpp").read_text().strip()) < 3
+        ) and (submission_dir / "Main.java").exists() and (
+            len((submission_dir / "Main.java").read_text().strip()) < 3
+        ):
+            return True
+        else:
+            return False
+
+
     def launch_submission(self):
         """Launch the submission.
 
@@ -166,6 +180,10 @@ class CppCondaEnvWorker(CondaEnvWorker):
         self.status = "finished"
 
         self._return_code = 0
+
+        if self.is_empty_submission():
+            self._return_code = EMPTY_SUBMISSION
+            return
 
         is_cpp = self.is_cpp_submission()
         if is_cpp:
@@ -229,7 +247,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     p = subprocess.Popen(
                         get_conda_cmd(
                             # Make sure the process is killed as we cannot kill it from outside
-                            ["timeout", "120", str(bin_path)],
+                            ["timeout", "22", str(bin_path)],
                             options=["-v", f"{submission_dir}:{submission_dir}:ro"],
                         ),
                         stdout=open(os.path.join(output_dir, f"output/case{idx}.out"), "wb+"),
@@ -240,7 +258,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
                     p = subprocess.Popen(
                         get_conda_cmd(
                             # Make sure the process is killed as we cannot kill it from outside
-                            ["timeout", "120", "java", "Main"],
+                            ["timeout", "22", "java", "Main"],
                             options=["-v", f"{submission_dir}:{submission_dir}:ro", "-w", f"{submission_dir}"],
                         ),
                         stdout=open(os.path.join(output_dir, f"output/case{idx}.out"), "wb+"),
@@ -338,6 +356,10 @@ class CppCondaEnvWorker(CondaEnvWorker):
             if returncode:
                 if returncode == 139:
                     error_msg = "Segmentation fault (core dumped)"
+                elif returncode == EMPTY_SUBMISSION:
+                    error_msg = 'Error: empty submission code.'
+                error_msg = error_msg.replace('sh: 1: pause: not found', 'Killed due to out of memory (limit at 500 MB)')
+
 
             # copy the predictions into the disk
             # no need to create the directory, it will be handled by copytree

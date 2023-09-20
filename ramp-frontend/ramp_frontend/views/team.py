@@ -53,6 +53,7 @@ def my_teams(event_name):
     event_name : str
         The name of the event.
     """
+    #raise ValueError('test error')
     current_user = flask_login.current_user
     res = _validate_team_request(db.session, event_name, current_user)
     if res is not None:
