@@ -318,6 +318,18 @@ class Dispatcher:
 
     def launch(self):
         """Launch the dispatcher."""
+        try:
+            import sentry_sdk
+            if "SENTRY_DSN" in os.environ:
+                sentry_sdk.init(
+                    dsn=os.environ['SENTRY_DSN'],
+                    # Set traces_sample_rate to 1.0 to capture 100%
+                    # of transactions for performance monitoring.
+                    # We recommend adjusting this value in production.
+                    traces_sample_rate=0.5
+                )
+        except ImportError:
+            pass
         self._logger.info("Starting the RAMP dispatcher")
         with session_scope(self._database_config) as session:
             self._logger.info("Open a session to the database")

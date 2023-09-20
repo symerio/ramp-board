@@ -22,7 +22,6 @@ def make_app(config_file):
     try:
         import sentry_sdk
         if "SENTRY_DSN" in os.environ:
-            #raise ValueError
             sentry_sdk.init(
                 dsn=os.environ['SENTRY_DSN'],
                 # Set traces_sample_rate to 1.0 to capture 100%
