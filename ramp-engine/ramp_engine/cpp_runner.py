@@ -340,7 +340,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
                 log_output = f.read()
             error_msg = _get_traceback(log_output.decode("utf-8"))
             if self.status == "timeout":
-                error_msg += "\nWorker killed due to timeout after {}s.".format(
+                error_msg = "Worker killed due to timeout after {}s.".format(
                     self.timeout
                 )
             if self.status == "timeout":
@@ -359,6 +359,7 @@ class CppCondaEnvWorker(CondaEnvWorker):
                 elif returncode == EMPTY_SUBMISSION:
                     error_msg = 'Error: empty submission code.'
                 error_msg = error_msg.replace('sh: 1: pause: not found', 'Killed due to out of memory (limit at 500 MB)')
+                error_msg = error_msg.replace('\x00', '')
 
 
             # copy the predictions into the disk

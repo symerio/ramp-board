@@ -759,7 +759,7 @@ def set_submission_error_msg(session, submission_id, error_msg):
         The error message.
     """
     submission = select_submission_by_id(session, submission_id)
-    submission.error_msg = error_msg
+    submission.error_msg = error_msg.replace('\x00', '')
     session.commit()
 
 
